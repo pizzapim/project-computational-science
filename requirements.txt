@@ -1,0 +1,3 @@
+cellular_automaton >= 1.0.8
+recordclass
+pygame

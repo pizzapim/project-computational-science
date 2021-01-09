@@ -4,7 +4,7 @@
 
 Python 3.9.1
 
-`pip install recordclass pygame cellular-automaton`
+`pip install -r requirements.txt`
 
 https://pypi.org/project/cellular-automaton/
 
