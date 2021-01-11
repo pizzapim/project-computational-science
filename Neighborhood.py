@@ -12,9 +12,11 @@ class VonNeumannNeighborhood():
             for x in range(-(r-i), r-i+1):
                 self.coords.append((x, i))
                 self.coords.append((x, -i))
+
+        # Center removed
         self.coords.remove((0,0))
-    
-    
+
+
     def for_coords(self, x, y, N):
         neighbors = []
 
