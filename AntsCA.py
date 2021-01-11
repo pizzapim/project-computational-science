@@ -1,3 +1,5 @@
+from Neighborhood import VonNeumannNeighborhood
+
 from enum import IntEnum
 from random import random, randint
 
@@ -48,3 +50,14 @@ class AntsCA():
             printchar(" ")
         elif state >= Cell.NORTH and state <= Cell.WEST:
             printchar("A")
+    
+
+    def evolve(self):
+        for y in range(0, self.N):
+            for x in range(0, self.N):
+                neighbors =  self.__neighborhood.for_coords(x, y, self.N)
+                self.__evolve_cell(x, y, neighbors)
+    
+
+    def __evolve_cell(self, x, y, neighbors):
+        [print(c) for c in neighbors]

@@ -15,9 +15,13 @@ class VonNeumannNeighborhood():
     
     
     def for_coords(self, x, y, N):
+        neighbors = []
+
         for (offsetx, offsety) in self.coords:
             resx = x + offsetx
             resy = y + offsety
 
             if resx >= 0 and resy >= 0 and resx < N and resy < N:
-                yield (resx, resy)
+                neighbors.append((resx, resy))
+        
+        return neighbors
