@@ -12,6 +12,7 @@ class VonNeumannNeighborhood():
             for x in range(-(r-i), r-i+1):
                 self.coords.append((x, i))
                 self.coords.append((x, -i))
+        self.coords.remove((0,0))
     
     
     def for_coords(self, x, y, N):
@@ -23,5 +24,5 @@ class VonNeumannNeighborhood():
 
             if resx >= 0 and resy >= 0 and resx < N and resy < N:
                 neighbors.append((resx, resy))
-        
+
         return neighbors
