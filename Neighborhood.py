@@ -17,7 +17,7 @@ class VonNeumannNeighborhood():
             resx = x + offsetx
             resy = y + offsety
 
-            if resx >= 0 and resy >= 0 and resx < N and resy < N:
+            if resx > 0 and resy > 0 and resx < N-1 and resy < N-1:
                 neighbors.append((resx, resy))
 
         return neighbors
