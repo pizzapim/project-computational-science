@@ -60,24 +60,31 @@ class AntsCA():
             printchar("←")
         elif state == Cell.STAY:
             printchar("·")
+    
+
+    def __internal_cells(self):
+        for y in range(1, self.N-1):
+            for x in range(1, self.N-1):
+                yield (x, y)
 
 
     def evolve(self):
         self.__sense()
         self.__walk()
+        
     
     def __sense(self):
         # Might be faster to only accumulate edits instead of deepcopying.
         grid_copy = deepcopy(self.__grid)
 
-        for y in range(0, self.N):
-            for x in range(0, self.N):
-                neighbors = self.__neighborhood.for_coords(x, y, self.N)
-                self.__evolve_cell(x, y, neighbors, grid_copy)
+        for (x, y) in self.__internal_cells():
+            neighbors = self.__neighborhood.for_coords(x, y, self.N)
+            self.__sense_cell(x, y, neighbors, grid_copy)
         
         self.__grid = grid_copy
 
-    def __evolve_cell(self, x, y, neighbors, grid_copy):
+
+    def __sense_cell(self, x, y, neighbors, grid_copy):
         [site, pher] = self.__grid[y][x]
         
         if site in [Cell.BORDER, Cell.EMPTY]:
@@ -126,19 +133,14 @@ class AntsCA():
         
         # We have found a cell, now check how we should turn.
         (nx, ny) = choice(max_cells)
-        print("x=", x, "y=", y, "nx=", nx, "ny=", ny)
         directions = []
         if nx > x:
-            print("Going east.")
             directions.append(Cell.EAST)
         elif nx < x:
-            print("Going west.")
             directions.append(Cell.WEST)
         if ny > y:
-            print("Going south.")
             directions.append(Cell.SOUTH)
         elif ny < y:
-            print("Going north.")
             directions.append(Cell.NORTH)
         
         direction = choice(directions)
@@ -146,11 +148,59 @@ class AntsCA():
 
 
     def __walk(self):
-        pass
+        grid_copy = deepcopy(self.__grid)
+
+        for (x, y) in self.__internal_cells():
+            self.__walk_cell(x, y, grid_copy)
+        
+        self.__grid = grid_copy
+
+    
+    def __walk_cell(self, x, y, grid_copy):
+        [state, pher] = self.__grid[y][x]
+
+        # TODO: reinforce the trail? (rule 10)
+        if state == Cell.EMPTY:
+            [dstate, _] = grid_copy[y][x]
+            grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE)]
+        elif state == Cell.NORTH:
+            [dstate, dpher] = grid_copy[y-1][x]
+            if dstate == Cell.EMPTY:
+                grid_copy[y][x] = [Cell.EMPTY, pher]
+                grid_copy[y-1][x] = [Cell.SOUTH, dpher]
+            else:
+                grid_copy[y][x] = [Cell.STAY, pher]
+        elif state == Cell.EAST:
+            [dstate, dpher] = grid_copy[y][x+1]
+            if dstate == Cell.EMPTY:
+                grid_copy[y][x] = [Cell.EMPTY, pher]
+                grid_copy[y][x+1] = [Cell.WEST, dpher]
+            else:
+                grid_copy[y][x] = [Cell.STAY, pher]
+        elif state == Cell.SOUTH:
+            [dstate, dpher] = grid_copy[y+1][x]
+            if dstate == Cell.EMPTY:
+                grid_copy[y][x] = [Cell.EMPTY, pher]
+                grid_copy[y+1][x] = [Cell.NORTH, dpher]
+            else:
+                grid_copy[y][x] = [Cell.STAY, pher]
+        elif state == Cell.WEST:
+            [dstate, dpher] = grid_copy[y][x-1]
+            if dstate == Cell.EMPTY:
+                grid_copy[y][x] = [Cell.EMPTY, pher]
+                grid_copy[y][x-1] = [Cell.EAST, dpher]
+            else:
+                grid_copy[y][x] = [Cell.STAY, pher]
+
 
 if __name__== "__main__":
     N = 5
     ants = AntsCA(N)
+    print("Initial grid:")
     ants.print_grid()
-    ants.evolve()
+    ants._AntsCA__sense()
+    print("Grid after sense:")
+    ants.print_grid()
+    ants._AntsCA__walk()
+    print("Grid after walk:")
     ants.print_grid()
