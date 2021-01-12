@@ -13,6 +13,7 @@ class Cell(IntEnum):
     STAY = 5,
     BORDER = 6
 
+# Configuration variables
 INIT_ANT_PROB = .1
 BORDER_PHER = -1.
 PHER_EVAPORATE = .01
