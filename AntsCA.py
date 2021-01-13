@@ -63,7 +63,7 @@ class AntsCA():
 
         # if self.FOOD < MAX_FOOD:
         #     self.FOOD += 1
-        #     return [Cell.FOOD, 0.]
+        #     return [Cell.FOOD, 100]
 
         return [Cell(randint(Cell.NORTH, Cell.WEST)), 0.]
 
@@ -140,6 +140,7 @@ class AntsCA():
 
         max_pher = float('-inf')
         max_cells = []
+        best_state = Cell.EMPTY
 
         # Find the cell(s) in the neighborhood with the highest pheromones.
         for (nx, ny) in neighbors:
@@ -152,8 +153,6 @@ class AntsCA():
             elif state >= Cell.NORTH and state <= Cell.STAY:
                 # Do not move to a cell already inhabited.
                 pher_result = -2.
-            # elif state == Cell.FOOD:
-            # elif state == Cell.NEST:
             else:
                 pher_result = npher
 
@@ -161,6 +160,7 @@ class AntsCA():
                 # We have seen a cell with higher pheromones.
                 max_pher = pher_result
                 max_cells = [(nx, ny)]
+                best_state = state
             elif pher_result == max_pher:
                 # We have seen a cell with equal pheromones.
                 max_cells.append((nx, ny))
@@ -173,6 +173,20 @@ class AntsCA():
         # We have found a cell, now check how we should turn.
         (nx, ny) = choice(max_cells)
         directions = []
+        # if best_state == Cell.FOOD:
+        #     print('hoi')
+        #     if nx > x:
+        #         print('1')
+        #         directions.append(Cell.WEST)
+        #     elif nx < x:
+        #         print('2')
+        #         directions.append(Cell.EAST)
+        #     if ny > y:
+        #         print('3')
+        #         directions.append(Cell.NORTH)
+        #     elif ny < y:
+        #         print('4')
+        #         directions.append(Cell.SOUTH)
         if nx > x:
             directions.append(Cell.EAST)
         elif nx < x:
@@ -231,24 +245,23 @@ class AntsCA():
             else:
                 grid_copy[y][x] = [Cell.STAY, pher]
 
+def animate(i):
+    im.set_data(animate.map)
+    ants._AntsCA__sense()
+    ants._AntsCA__walk()
+    animate.map = [[c[0].value for c in b] for b in ants.grid]
+
 
 if __name__== "__main__":
-    N = 20
+    N = 40
     ants = AntsCA(N)
-    X = [[c[0].value for c in b] for b in ants.grid]
+    map = [[c[0].value for c in b] for b in ants.grid]
 
     fig = plt.figure(figsize=(25/3, 6.25))
     ax = fig.add_subplot(111)
     ax.set_axis_off()
-    im = ax.imshow(X, cmap=cmap, norm=norm)#, interpolation='nearest')
-    # The animation function: called to produce a frame for each generation.
-    def animate(i):
-        im.set_data(animate.X)
-        ants._AntsCA__sense()
-        ants._AntsCA__walk()
-        animate.X = [[c[0].value for c in b] for b in ants.grid]
-    # Bind our grid to the identifier X in the animate function's namespace.
-    animate.X = X
+    im = ax.imshow(map, cmap=cmap, norm=norm)#, interpolation='nearest')
+    animate.map = map
 
     # Interval between frames (ms).
     interval = 100
