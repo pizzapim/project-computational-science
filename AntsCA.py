@@ -44,7 +44,7 @@ class AntsCA():
         self.NESTS = 0
         self.FOOD = 0
         self.__neighborhood = neighborhood
-        self.__grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
+        self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
 
 
 
@@ -77,7 +77,7 @@ class AntsCA():
 
 
     def print_cell(self, x, y):
-        [state, _] = self.__grid[y][x]
+        [state, _] = self.grid[y][x]
         printchar = lambda s: print(s, end="")
 
         if state == Cell.BORDER:
@@ -113,17 +113,17 @@ class AntsCA():
 
     def __sense(self):
         # Might be faster to only accumulate edits instead of deepcopying.
-        grid_copy = deepcopy(self.__grid)
+        grid_copy = deepcopy(self.grid)
 
         for (x, y) in self.__internal_cells():
             neighbors = self.__neighborhood.for_coords(x, y, self.N)
             self.__sense_cell(x, y, neighbors, grid_copy)
 
-        self.__grid = grid_copy
+        self.grid = grid_copy
 
 
     def __sense_cell(self, x, y, neighbors, grid_copy):
-        [site, pher] = self.__grid[y][x]
+        [site, pher] = self.grid[y][x]
 
         if site in [Cell.BORDER, Cell.EMPTY]:
             return
@@ -144,7 +144,7 @@ class AntsCA():
 
         # Find the cell(s) in the neighborhood with the highest pheromones.
         for (nx, ny) in neighbors:
-            [state, npher] = self.__grid[ny][nx]
+            [state, npher] = self.grid[ny][nx]
             pher_result = 0.
 
             if prev == (nx, ny):
@@ -188,16 +188,16 @@ class AntsCA():
 
 
     def __walk(self):
-        grid_copy = deepcopy(self.__grid)
+        grid_copy = deepcopy(self.grid)
 
         for (x, y) in self.__internal_cells():
             self.__walk_cell(x, y, grid_copy)
 
-        self.__grid = grid_copy
+        self.grid = grid_copy
 
 
     def __walk_cell(self, x, y, grid_copy):
-        [state, pher] = self.__grid[y][x]
+        [state, pher] = self.grid[y][x]
 
         # TODO: reinforce the trail? (rule 10)
         if state == Cell.EMPTY:
@@ -236,7 +236,7 @@ class AntsCA():
 if __name__== "__main__":
     N = 20
     ants = AntsCA(N)
-    X = [[c[0].value for c in b] for b in ants.__grid]
+    X = [[c[0].value for c in b] for b in ants.grid]
 
     fig = plt.figure(figsize=(25/3, 6.25))
     ax = fig.add_subplot(111)
@@ -245,9 +245,9 @@ if __name__== "__main__":
     # The animation function: called to produce a frame for each generation.
     def animate(i):
         im.set_data(animate.X)
-        ants._AntsCA__sense()
-        print([[c[0].value for c in b] for b in ants.__grid][1])
-        animate.X = [[c[0].value for c in b] for b in ants.__grid]
+        ants.evole()
+        print([[c[0].value for c in b] for b in ants.grid][1])
+        animate.X = [[c[0].value for c in b] for b in ants.grid]
     # Bind our grid to the identifier X in the animate function's namespace.
     animate.X = X
 
