@@ -30,9 +30,9 @@ class Cell(IntEnum):
 
 
 # Configuration variables
-INIT_ANT_PROB = .01
+INIT_ANT_PROB = .1
 INIT_NEST_PROB = .01
-INIT_FOOD_PROB = .01
+INIT_FOOD_PROB = .1
 BORDER_PHER = -1.
 PHER_EVAPORATE = .01
 MAX_NESTS = 1
@@ -49,17 +49,9 @@ class AntsCA():
         self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
         self.__init_food()
 
-
+    # Initialize each cell in grid to become a border, empty or an ant.
     def __init_cell(self, coords):
-
-        # Border or Nest
         if 0 in coords or self.N-1 in coords:
-            if (random() < INIT_NEST_PROB) and (self.NESTS < MAX_NESTS):
-                # Nest not in corner
-                if coords not in [(0,0), (0,self.N), (self.N, 0), (self.N, self.N)]:
-                    self.NESTS += 1
-                    self.NEST_COORD = coords
-                    return [Cell.NEST, 0., 0]
             return [Cell.BORDER, BORDER_PHER, 0]
 
         if random() > INIT_ANT_PROB:
@@ -67,7 +59,7 @@ class AntsCA():
 
         return [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
 
-
+    # Changes some ants to food and nests.
     def __init_food(self):
         for (x, y) in self.__internal_cells():
             [site, pher, signal] = self.grid[y][x]
@@ -77,15 +69,19 @@ class AntsCA():
             elif (random() < INIT_FOOD_PROB) and (site in [Cell.NORTH, Cell.WEST, Cell.EAST, Cell.SOUTH]):
                 self.FOOD += 1
                 self.grid[y][x] = [Cell.FOOD, -2, 0]
+            elif (random() < INIT_NEST_PROB) and (self.NESTS < MAX_NESTS):
+                self.NESTS += 1
+                self.NEST_COORD = (x,y)
+                self.grid[y][x] = [Cell.NEST, -2, 0]
 
-
+    # Print Grid. Can be removed.
     def print_grid(self):
         for y in range(0, self.N):
             for x in range(0, self.N):
                 self.print_cell(x, y)
             print()
 
-
+    # Print Cell. Can be removed.
     def print_cell(self, x, y):
         [state, _, _] = self.grid[y][x]
         printchar = lambda s: print(s, end="")
@@ -109,18 +105,18 @@ class AntsCA():
         elif state == Cell.FOOD:
             printchar("A")
 
-
+    # Get coordinates of each cell.
     def __internal_cells(self):
         for y in range(1, self.N-1):
             for x in range(1, self.N-1):
                 yield (x, y)
 
-
-    def evolve(self):
+    # Iterate one time.
+    def __evolve(self):
         self.__sense()
         self.__walk()
 
-
+    # Let every cell sense.
     def __sense(self):
         # Might be faster to only accumulate edits instead of deepcopying.
         grid_copy = deepcopy(self.grid)
@@ -131,13 +127,12 @@ class AntsCA():
 
         self.grid = grid_copy
 
-
+    # Every cell senses if its an ant. If it isnt it does nothing.
     def __sense_cell(self, x, y, neighbors, grid_copy):
         [site, pher, signal] = self.grid[y][x]
 
         if site in [Cell.BORDER, Cell.EMPTY, Cell.FOOD, Cell.NEST]:
             return
-            
 
         # The ant faces the way it just came from, but can also be STAY.
         prev = None
@@ -165,6 +160,7 @@ class AntsCA():
                 # Do not move to a cell already inhabited.
                 pher_result = -2.
             elif state == Cell.FOOD:
+                # If neighbor is food we change signal to 1 to imply an ant with food.
                 pher_result = -2
                 signal = 1
             else:
@@ -188,27 +184,28 @@ class AntsCA():
         directions = []
         (cx, cy) = self.NEST_COORD
 
+        # If ant carries food he has to walk in the shortest path to the nest. If in front of nest he moves away from it and leaves his food.
         if signal == 1:
             if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
                 if cx > x:
-                    directions.append(Cell.EAST)
-                elif cx < x:
                     directions.append(Cell.WEST)
+                elif cx < x:
+                    directions.append(Cell.EAST)
                 elif cy > y:
-                    directions.append(Cell.SOUTH)
-                else:
                     directions.append(Cell.NORTH)
+                elif cy < y:
+                    directions.append(Cell.SOUTH)
                 signal = 0
             else:
-                if cx > x:
-                    directions.append(Cell.EAST)
-                elif cx < x:
-                    directions.append(Cell.WEST)
-                if cy > y:
-                    directions.append(Cell.SOUTH)
-                elif cy < y:
-                    directions.append(Cell.NORTH)
+                self.__return_direction(cx, cy, x, y, directions)
         else:
+            self.__return_direction(nx, ny, x, y, directions)
+
+        direction = choice(directions)
+        grid_copy[y][x] = [direction, pher, signal]
+
+    # This adds the directions to where the point(nx, ny) is relative to the point (x, y)
+    def __return_direction(self, nx, ny, x, y, directions):
             if nx > x:
                 directions.append(Cell.EAST)
             elif nx < x:
@@ -217,9 +214,6 @@ class AntsCA():
                 directions.append(Cell.SOUTH)
             elif ny < y:
                 directions.append(Cell.NORTH)
-
-        direction = choice(directions)
-        grid_copy[y][x] = [direction, pher, signal]
 
 
     def __walk(self):
@@ -267,16 +261,15 @@ class AntsCA():
             else:
                 grid_copy[y][x] = [Cell.STAY, pher, signal]
 
-
+# Iterate one stap and animate it.
 def animate(i):
     im.set_data(animate.map)
-    ants._AntsCA__sense()
-    ants._AntsCA__walk()
+    ants._AntsCA__evolve()
     animate.map = [[c[0].value for c in b] for b in ants.grid]
 
 
 if __name__== "__main__":
-    N = 80
+    N = 50
     ants = AntsCA(N)
     map = [[c[0].value for c in b] for b in ants.grid]
 
