@@ -30,7 +30,7 @@ class Cell(IntEnum):
 
 
 # Configuration variables
-INIT_ANT_PROB = .1
+INIT_ANT_PROB = .01
 INIT_NEST_PROB = .01
 INIT_FOOD_PROB = .01
 BORDER_PHER = -1.
