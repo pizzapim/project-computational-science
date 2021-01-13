@@ -12,7 +12,7 @@ from matplotlib import colors
 
 # Note that for the colormap to work, this list and the bounds list
 # must be one larger than the number of different values in the array.
-colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'grey', 'yellow']
+colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'grey', 'green']
 cmap = colors.ListedColormap(colors_list)
 bounds = [0,1,2,3,4,5,6,7,8]
 norm = colors.BoundaryNorm(bounds, cmap.N)
@@ -44,6 +44,7 @@ class AntsCA():
         self.FOOD = 0
         self.__neighborhood = neighborhood
         self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
+        self.__init_food()
 
 
 
@@ -61,11 +62,16 @@ class AntsCA():
         if random() > INIT_ANT_PROB:
             return [Cell.EMPTY, 0.]
 
-        # if self.FOOD < MAX_FOOD:
-        #     self.FOOD += 1
-        #     return [Cell.FOOD, 100]
-
         return [Cell(randint(Cell.NORTH, Cell.WEST)), 0.]
+
+    def __init_food(self):
+        for (x, y) in self.__internal_cells():
+            [site, pher] = self.grid[y][x]
+            if self.FOOD == MAX_FOOD:
+                break
+            elif (random() < INIT_ANT_PROB) and (site in [Cell.NORTH, Cell.WEST, Cell.EAST, Cell.SOUTH]):
+                self.FOOD += 1
+                self.grid[y][x] = [Cell.FOOD, 100]
 
 
     def print_grid(self):
@@ -173,20 +179,6 @@ class AntsCA():
         # We have found a cell, now check how we should turn.
         (nx, ny) = choice(max_cells)
         directions = []
-        # if best_state == Cell.FOOD:
-        #     print('hoi')
-        #     if nx > x:
-        #         print('1')
-        #         directions.append(Cell.WEST)
-        #     elif nx < x:
-        #         print('2')
-        #         directions.append(Cell.EAST)
-        #     if ny > y:
-        #         print('3')
-        #         directions.append(Cell.NORTH)
-        #     elif ny < y:
-        #         print('4')
-        #         directions.append(Cell.SOUTH)
         if nx > x:
             directions.append(Cell.EAST)
         elif nx < x:
