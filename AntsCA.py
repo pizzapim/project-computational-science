@@ -10,10 +10,9 @@ from matplotlib import animation
 from matplotlib import colors
 
 
-# Colours for visualization: brown for EMPTY, dark green for TREE and orange
-# for FIRE. Note that for the colormap to work, this list and the bounds list
+# Note that for the colormap to work, this list and the bounds list
 # must be one larger than the number of different values in the array.
-colors_list = ['white', 'brown', 'purple', 'yellow', 'green', 'brown', 'black', 'grey', 'yellow']
+colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'grey', 'yellow']
 cmap = colors.ListedColormap(colors_list)
 bounds = [0,1,2,3,4,5,6,7,8]
 norm = colors.BoundaryNorm(bounds, cmap.N)
@@ -245,8 +244,8 @@ if __name__== "__main__":
     # The animation function: called to produce a frame for each generation.
     def animate(i):
         im.set_data(animate.X)
-        ants.evole()
-        print([[c[0].value for c in b] for b in ants.grid][1])
+        ants._AntsCA__sense()
+        ants._AntsCA__walk()
         animate.X = [[c[0].value for c in b] for b in ants.grid]
     # Bind our grid to the identifier X in the animate function's namespace.
     animate.X = X
