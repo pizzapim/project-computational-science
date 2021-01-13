@@ -12,9 +12,9 @@ from matplotlib import colors
 
 # Note that for the colormap to work, this list and the bounds list
 # must be one larger than the number of different values in the array.
-colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'grey', 'green']
+colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'orange', 'green']
 cmap = colors.ListedColormap(colors_list)
-bounds = [0,1,2,3,4,5,6,7,8]
+bounds = [0,1,2,3,4,5,6,7,8,9]
 norm = colors.BoundaryNorm(bounds, cmap.N)
 
 class Cell(IntEnum):
@@ -28,11 +28,13 @@ class Cell(IntEnum):
     NEST = 7,
     FOOD = 8
 
+
 # Configuration variables
 INIT_ANT_PROB = .1
+INIT_NEST_PROB = .01
+INIT_FOOD_PROB = .01
 BORDER_PHER = -1.
 PHER_EVAPORATE = .01
-INIT_NEST_PROB = .1
 MAX_NESTS = 1
 MAX_FOOD = 10
 
@@ -43,35 +45,38 @@ class AntsCA():
         self.NESTS = 0
         self.FOOD = 0
         self.__neighborhood = neighborhood
+        self.NEST_COORD = (0,0)
         self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
         self.__init_food()
-
 
 
     def __init_cell(self, coords):
 
         # Border or Nest
         if 0 in coords or self.N-1 in coords:
-            # if random() < INIT_NEST_PROB and self.NESTS < MAX_NESTS:
-            #     # Nest not in corner
-            #     if coords not in [(0,0), (0,self.N), (self.N, 0), (self.N, self.N)]:
-            #         self.NESTS += 1
-            #         return [Cell.NEST, 0.]
-            return [Cell.BORDER, BORDER_PHER]
+            if (random() < INIT_NEST_PROB) and (self.NESTS < MAX_NESTS):
+                # Nest not in corner
+                if coords not in [(0,0), (0,self.N), (self.N, 0), (self.N, self.N)]:
+                    self.NESTS += 1
+                    self.NEST_COORD = coords
+                    return [Cell.NEST, 0., 0]
+            return [Cell.BORDER, BORDER_PHER, 0]
 
         if random() > INIT_ANT_PROB:
-            return [Cell.EMPTY, 0.]
+            return [Cell.EMPTY, 0., 0]
 
-        return [Cell(randint(Cell.NORTH, Cell.WEST)), 0.]
+        return [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
+
 
     def __init_food(self):
         for (x, y) in self.__internal_cells():
-            [site, pher] = self.grid[y][x]
+            [site, pher, signal] = self.grid[y][x]
+
             if self.FOOD == MAX_FOOD:
                 break
-            elif (random() < INIT_ANT_PROB) and (site in [Cell.NORTH, Cell.WEST, Cell.EAST, Cell.SOUTH]):
+            elif (random() < INIT_FOOD_PROB) and (site in [Cell.NORTH, Cell.WEST, Cell.EAST, Cell.SOUTH]):
                 self.FOOD += 1
-                self.grid[y][x] = [Cell.FOOD, 100]
+                self.grid[y][x] = [Cell.FOOD, -2, 0]
 
 
     def print_grid(self):
@@ -82,7 +87,7 @@ class AntsCA():
 
 
     def print_cell(self, x, y):
-        [state, _] = self.grid[y][x]
+        [state, _, _] = self.grid[y][x]
         printchar = lambda s: print(s, end="")
 
         if state == Cell.BORDER:
@@ -128,10 +133,11 @@ class AntsCA():
 
 
     def __sense_cell(self, x, y, neighbors, grid_copy):
-        [site, pher] = self.grid[y][x]
+        [site, pher, signal] = self.grid[y][x]
 
-        if site in [Cell.BORDER, Cell.EMPTY]:
+        if site in [Cell.BORDER, Cell.EMPTY, Cell.FOOD, Cell.NEST]:
             return
+            
 
         # The ant faces the way it just came from, but can also be STAY.
         prev = None
@@ -146,11 +152,10 @@ class AntsCA():
 
         max_pher = float('-inf')
         max_cells = []
-        best_state = Cell.EMPTY
 
         # Find the cell(s) in the neighborhood with the highest pheromones.
         for (nx, ny) in neighbors:
-            [state, npher] = self.grid[ny][nx]
+            [state, npher, _] = self.grid[ny][nx]
             pher_result = 0.
 
             if prev == (nx, ny):
@@ -159,6 +164,9 @@ class AntsCA():
             elif state >= Cell.NORTH and state <= Cell.STAY:
                 # Do not move to a cell already inhabited.
                 pher_result = -2.
+            elif state == Cell.FOOD:
+                pher_result = -2
+                signal = 1
             else:
                 pher_result = npher
 
@@ -166,30 +174,52 @@ class AntsCA():
                 # We have seen a cell with higher pheromones.
                 max_pher = pher_result
                 max_cells = [(nx, ny)]
-                best_state = state
             elif pher_result == max_pher:
                 # We have seen a cell with equal pheromones.
                 max_cells.append((nx, ny))
 
         if max_pher < 0.:
             # Can't see a cell with positive pheromones, stay in place.
-            grid_copy[y][x] = [Cell.STAY, pher]
+            grid_copy[y][x] = [Cell.STAY, pher, signal]
             return
 
         # We have found a cell, now check how we should turn.
         (nx, ny) = choice(max_cells)
         directions = []
-        if nx > x:
-            directions.append(Cell.EAST)
-        elif nx < x:
-            directions.append(Cell.WEST)
-        if ny > y:
-            directions.append(Cell.SOUTH)
-        elif ny < y:
-            directions.append(Cell.NORTH)
+        (cx, cy) = self.NEST_COORD
+
+        if signal == 1:
+            if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
+                if cx > x:
+                    directions.append(Cell.EAST)
+                elif cx < x:
+                    directions.append(Cell.WEST)
+                elif cy > y:
+                    directions.append(Cell.SOUTH)
+                else:
+                    directions.append(Cell.NORTH)
+                signal = 0
+            else:
+                if cx > x:
+                    directions.append(Cell.EAST)
+                elif cx < x:
+                    directions.append(Cell.WEST)
+                if cy > y:
+                    directions.append(Cell.SOUTH)
+                elif cy < y:
+                    directions.append(Cell.NORTH)
+        else:
+            if nx > x:
+                directions.append(Cell.EAST)
+            elif nx < x:
+                directions.append(Cell.WEST)
+            if ny > y:
+                directions.append(Cell.SOUTH)
+            elif ny < y:
+                directions.append(Cell.NORTH)
 
         direction = choice(directions)
-        grid_copy[y][x] = [direction, pher]
+        grid_copy[y][x] = [direction, pher, signal]
 
 
     def __walk(self):
@@ -202,40 +232,41 @@ class AntsCA():
 
 
     def __walk_cell(self, x, y, grid_copy):
-        [state, pher] = self.grid[y][x]
+        [state, pher, signal] = self.grid[y][x]
 
         # TODO: reinforce the trail? (rule 10)
         if state == Cell.EMPTY:
-            [dstate, _] = grid_copy[y][x]
-            grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE)]
+            [dstate, _, _] = grid_copy[y][x]
+            grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
         elif state == Cell.NORTH:
-            [dstate, dpher] = grid_copy[y-1][x]
+            [dstate, dpher, _] = grid_copy[y-1][x]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher]
-                grid_copy[y-1][x] = [Cell.SOUTH, dpher]
+                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
+                grid_copy[y-1][x] = [Cell.SOUTH, dpher, signal]
             else:
-                grid_copy[y][x] = [Cell.STAY, pher]
+                grid_copy[y][x] = [Cell.STAY, pher, signal]
         elif state == Cell.EAST:
-            [dstate, dpher] = grid_copy[y][x+1]
+            [dstate, dpher, _] = grid_copy[y][x+1]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher]
-                grid_copy[y][x+1] = [Cell.WEST, dpher]
+                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
+                grid_copy[y][x+1] = [Cell.WEST, dpher, signal]
             else:
-                grid_copy[y][x] = [Cell.STAY, pher]
+                grid_copy[y][x] = [Cell.STAY, pher, signal]
         elif state == Cell.SOUTH:
-            [dstate, dpher] = grid_copy[y+1][x]
+            [dstate, dpher, _] = grid_copy[y+1][x]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher]
-                grid_copy[y+1][x] = [Cell.NORTH, dpher]
+                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
+                grid_copy[y+1][x] = [Cell.NORTH, dpher, signal]
             else:
-                grid_copy[y][x] = [Cell.STAY, pher]
+                grid_copy[y][x] = [Cell.STAY, pher, signal]
         elif state == Cell.WEST:
-            [dstate, dpher] = grid_copy[y][x-1]
+            [dstate, dpher, _] = grid_copy[y][x-1]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher]
-                grid_copy[y][x-1] = [Cell.EAST, dpher]
+                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
+                grid_copy[y][x-1] = [Cell.EAST, dpher, signal]
             else:
-                grid_copy[y][x] = [Cell.STAY, pher]
+                grid_copy[y][x] = [Cell.STAY, pher, signal]
+
 
 def animate(i):
     im.set_data(animate.map)
@@ -245,7 +276,7 @@ def animate(i):
 
 
 if __name__== "__main__":
-    N = 40
+    N = 80
     ants = AntsCA(N)
     map = [[c[0].value for c in b] for b in ants.grid]
 
