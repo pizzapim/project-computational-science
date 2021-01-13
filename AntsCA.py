@@ -191,7 +191,7 @@ class AntsCA():
         grid_copy = deepcopy(self.__grid)
 
         for (x, y) in self.__internal_cells():
-            grid_copy = self.__walk_cell(x, y, grid_copy)
+            self.__walk_cell(x, y, grid_copy)
 
         self.__grid = grid_copy
 
