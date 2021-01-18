@@ -66,12 +66,13 @@ class AntsCA():
             if not self.N:
                 self.N = len(line) - 1
             
-            for char in line:
+            for x, char in enumerate(line):
                 if char == "B":
                     cell = [Cell.BORDER, BORDER_PHER, 0]
                 elif char == "E":
                     cell = [Cell.EMPTY, 0., 0]
                 elif char == "N":
+                    self.NEST_COORD = (x, y)
                     cell = [Cell.NEST, -2, 0]
                 elif char == "A":
                     cell = [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
@@ -195,6 +196,7 @@ class AntsCA():
                     directions.append(Cell.SOUTH)
                 signal = 0
             else:
+                print("not next to nest cx= ", cx, " cy=", cy)
                 self.__return_direction(cx, cy, x, y, directions, prev)
 
         if signal == 0 or directions == []:
@@ -273,10 +275,10 @@ class AntsCA():
         [state, pher, signal] = self.grid[y][x]
 
         # TODO: reinforce the trail? (rule 10)
-        # if state == Cell.EMPTY:
-        #     if grid_copy[y][x][0] == Cell.EMPTY:
-        #         [dstate, _, _] = grid_copy[y][x]
-        #         grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
+        if state == Cell.EMPTY:
+            if grid_copy[y][x][0] == Cell.EMPTY:
+                [dstate, _, _] = grid_copy[y][x]
+                grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
         if state == Cell.NORTH:
             [dstate, dpher, _] = grid_copy[y-1][x]
             if dstate == Cell.EMPTY:
@@ -334,6 +336,6 @@ if __name__== "__main__":
     animate.map = map
 
     # Interval between frames (ms).
-    interval = 100
+    interval = 50
     anim = animation.FuncAnimation(fig, animate, interval=interval)
     plt.show()
