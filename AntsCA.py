@@ -34,6 +34,7 @@ class Cell(IntEnum):
 INIT_ANT_PROB = .05
 INIT_NEST_PROB = .01
 INIT_FOOD_PROB = .1
+INIT_FOOD_PER_SPOT = 10
 BORDER_PHER = -1.
 PHER_EVAPORATE = .01
 MAX_NESTS = 1
@@ -77,7 +78,7 @@ class AntsCA():
                 elif char == "A":
                     cell = [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
                 elif char == "F":
-                    cell = [Cell.FOOD, -2, 0]
+                    cell = [Cell.FOOD, -2, INIT_FOOD_PER_SPOT]
                 elif char == "\n":
                     continue
                 self.grid[y].append(cell)
@@ -102,7 +103,7 @@ class AntsCA():
                 break
             elif (random() < INIT_FOOD_PROB) and (site in [Cell.NORTH, Cell.WEST, Cell.EAST, Cell.SOUTH]):
                 self.FOOD += 1
-                self.grid[y][x] = [Cell.FOOD, -2, 0]
+                self.grid[y][x] = [Cell.FOOD, -2, INIT_FOOD_PER_SPOT]
             elif (random() < INIT_NEST_PROB) and (self.NESTS < MAX_NESTS):
                 self.NESTS += 1
                 self.NEST_COORD = (x,y)
@@ -197,7 +198,7 @@ class AntsCA():
                 self.__return_direction(cx, cy, x, y, directions, prev)
 
         if signal == 0 or directions == []:
-            (best, signal) = self.__find_best_neighbor(neighbors, prev, signal)
+            (best, signal) = self.__find_best_neighbor(neighbors, prev, signal, grid_copy)
             if not best:
                 grid_copy[y][x] = [Cell.STAY, pher, signal]
                 return
@@ -208,14 +209,14 @@ class AntsCA():
         direction = choice(directions)
         grid_copy[y][x] = [direction, pher, signal]
         
-    
-    def __find_best_neighbor(self, neighbors, prev, signal):
+
+    def __find_best_neighbor(self, neighbors, prev, signal, grid_copy):
         max_pher = float('-inf')
         max_cells = []
 
         # Find the cell(s) in the neighborhood with the highest pheromones.
         for (nx, ny) in neighbors:
-            [state, npher, _] = self.grid[ny][nx]
+            [state, npher, nsig] = self.grid[ny][nx]
             pher_result = 0.
 
             if prev == (nx, ny):
@@ -227,7 +228,13 @@ class AntsCA():
             elif state == Cell.FOOD:
                 # If neighbor is food we change signal to 1 to imply an ant with food.
                 pher_result = -2.
-                signal = 1
+                if signal == 0:
+                    # Take food if ant does not have food already.
+                    if (nsig - 1) > 0:
+                        grid_copy[ny][nx] = [state, npher, nsig - 1]
+                    else:
+                        grid_copy[ny][nx] = [Cell.EMPTY, 0, 0]
+                    signal = 1
             else:
                 pher_result = npher
 
