@@ -52,7 +52,7 @@ class AntsCA():
         else:
             self.N = N
             self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
-        self.__init_food()
+            self.__init_food()
 
 
     def load_file(self, preset):
@@ -146,8 +146,7 @@ class AntsCA():
                 yield (x, y)
 
     # Iterate one time.
-    def __evolve(self):
-        print("evolve")
+    def evolve(self):
         self.__sense()
         self.__walk()
 
@@ -180,6 +179,38 @@ class AntsCA():
         elif site == Cell.EAST:
             prev = (x+1, y)
 
+        # If ant carries food he has to walk in the shortest path to the nest. If in front of nest he moves away from it and leaves his food.
+        directions = []
+        (cx, cy) = self.NEST_COORD
+        if signal == 1:
+            if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
+                print('next to nest!')
+                if cx > x and self.grid[y][x-1][0] == Cell.EMPTY:
+                    directions.append(Cell.WEST)
+                elif cx < x and self.grid[y][x-1][0] == Cell.EMPTY:
+                    directions.append(Cell.EAST)
+                elif cy > y and self.grid[y+1][x][0] == Cell.EMPTY:
+                    directions.append(Cell.NORTH)
+                elif cy < y and self.grid[y-1][x][0] == Cell.EMPTY:
+                    directions.append(Cell.SOUTH)
+                signal = 0
+            else:
+                self.__return_direction(cx, cy, x, y, directions, prev)
+
+        if signal == 0 or directions == []:
+            (best, signal) = self.__find_best_neighbor(neighbors, prev, signal)
+            if not best:
+                grid_copy[y][x] = [Cell.STAY, pher, signal]
+                return
+            
+            (nx, ny) = best
+            self.__return_direction(nx, ny, x, y, directions)
+
+        direction = choice(directions)
+        grid_copy[y][x] = [direction, pher, signal]
+        
+    
+    def __find_best_neighbor(self, neighbors, prev, signal):
         max_pher = float('-inf')
         max_cells = []
 
@@ -211,44 +242,22 @@ class AntsCA():
 
         if max_pher < 0.:
             # Can't see a cell with positive pheromones, stay in place.
-            grid_copy[y][x] = [Cell.STAY, pher, signal]
-            return
+            return (None, signal)
 
         # We have found a cell, now check how we should turn.
-        (nx, ny) = choice(max_cells)
-        directions = []
-        (cx, cy) = self.NEST_COORD
+        return (choice(max_cells), signal)
 
-        # If ant carries food he has to walk in the shortest path to the nest. If in front of nest he moves away from it and leaves his food.
-        if signal == 1:
-            if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
-                if cx > x:
-                    directions.append(Cell.WEST)
-                elif cx < x:
-                    directions.append(Cell.EAST)
-                elif cy > y:
-                    directions.append(Cell.NORTH)
-                elif cy < y:
-                    directions.append(Cell.SOUTH)
-                signal = 0
-            else:
-                self.__return_direction(cx, cy, x, y, directions)
-        else:
-            self.__return_direction(nx, ny, x, y, directions)
-
-        direction = choice(directions)
-        grid_copy[y][x] = [direction, pher, signal]
 
     # This adds the directions to where the point(nx, ny) is relative to the point (x, y)
-    def __return_direction(self, nx, ny, x, y, directions):
-            if nx > x:
-                directions.append(Cell.EAST)
-            elif nx < x:
-                directions.append(Cell.WEST)
-            if ny > y:
-                directions.append(Cell.SOUTH)
-            elif ny < y:
-                directions.append(Cell.NORTH)
+    def __return_direction(self, nx, ny, x, y, directions, prev=None):
+        if nx > x and self.grid[y][x+1][0] == Cell.EMPTY and (x+1, y) != prev:
+            directions.append(Cell.EAST)
+        elif nx < x and self.grid[y][x-1][0] == Cell.EMPTY and (x-1, y) != prev:
+            directions.append(Cell.WEST)
+        if ny > y and self.grid[y+1][x][0] == Cell.EMPTY and (x, y+1) != prev:
+            directions.append(Cell.SOUTH)
+        elif ny < y and self.grid[y-1][x][0] == Cell.EMPTY and (x, y-1) != prev:
+            directions.append(Cell.NORTH)
 
 
     def __walk(self):
@@ -264,10 +273,11 @@ class AntsCA():
         [state, pher, signal] = self.grid[y][x]
 
         # TODO: reinforce the trail? (rule 10)
-        if state == Cell.EMPTY:
-            [dstate, _, _] = grid_copy[y][x]
-            grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
-        elif state == Cell.NORTH:
+        # if state == Cell.EMPTY:
+        #     if grid_copy[y][x][0] == Cell.EMPTY:
+        #         [dstate, _, _] = grid_copy[y][x]
+        #         grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
+        if state == Cell.NORTH:
             [dstate, dpher, _] = grid_copy[y-1][x]
             if dstate == Cell.EMPTY:
                 grid_copy[y][x] = [Cell.EMPTY, pher, 0]
@@ -299,8 +309,9 @@ class AntsCA():
 # Iterate one stap and animate it.
 def animate(i):
     im.set_data(animate.map)
-    ants._AntsCA__evolve()
+    ants.evolve()
     animate.map = [[c[0].value for c in b] for b in ants.grid]
+    ants.print_grid()
 
 
 if __name__== "__main__":

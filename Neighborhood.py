@@ -1,7 +1,7 @@
 class VonNeumannNeighborhood():
 
     def __init__(self, r=1):
-        self.coords = [(x, 0) for x in range(-r, r+1) if r != 0]
+        self.coords = [(x, 0) for x in range(-r, r+1) if x != 0]
 
         # Top and bottom triangle
         for i in range(r, 0, -1):
