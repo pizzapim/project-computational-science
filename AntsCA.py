@@ -60,13 +60,13 @@ class AntsCA():
         self.N = None
         with open(preset) as f:
             filecontents = f.readlines()
-        
+
         self.grid = []
         for y, line in enumerate(filecontents):
             self.grid.append([])
             if not self.N:
                 self.N = len(line) - 1
-            
+
             for x, char in enumerate(line):
                 if char == "B":
                     cell = [Cell.BORDER, BORDER_PHER, 0]
@@ -202,13 +202,13 @@ class AntsCA():
             if not best:
                 grid_copy[y][x] = [Cell.STAY, pher, signal]
                 return
-            
+
             (nx, ny) = best
             self.__return_direction(nx, ny, x, y, directions)
 
         direction = choice(directions)
         grid_copy[y][x] = [direction, pher, signal]
-        
+
 
     def __find_best_neighbor(self, neighbors, prev, signal, grid_copy):
         max_pher = float('-inf')
@@ -329,7 +329,7 @@ if __name__== "__main__":
         ants = AntsCA(preset=args.preset)
     else:
         ants = AntsCA(N)
-    
+
     map = [[c[0].value for c in b] for b in ants.grid]
 
     fig = plt.figure(figsize=(25/3, 6.25))
