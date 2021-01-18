@@ -3,6 +3,7 @@ from Neighborhood import VonNeumannNeighborhood
 from enum import IntEnum
 from random import random, randint, choice
 from copy import deepcopy
+import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,7 +31,7 @@ class Cell(IntEnum):
 
 
 # Configuration variables
-INIT_ANT_PROB = .1
+INIT_ANT_PROB = .05
 INIT_NEST_PROB = .01
 INIT_FOOD_PROB = .1
 BORDER_PHER = -1.
@@ -40,14 +41,47 @@ MAX_FOOD = 10
 
 class AntsCA():
 
-    def __init__(self, N=100, neighborhood=VonNeumannNeighborhood()):
-        self.N = N
+    def __init__(self, N=100, neighborhood=VonNeumannNeighborhood(), preset=None):
         self.NESTS = 0
         self.FOOD = 0
         self.__neighborhood = neighborhood
         self.NEST_COORD = (0,0)
-        self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
+
+        if preset:
+            self.load_file(preset)
+        else:
+            self.N = N
+            self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
         self.__init_food()
+
+
+    def load_file(self, preset):
+        self.N = None
+        with open(preset) as f:
+            filecontents = f.readlines()
+        
+        self.grid = []
+        for y, line in enumerate(filecontents):
+            self.grid.append([])
+            if not self.N:
+                self.N = len(line) - 1
+            
+            for char in line:
+                if char == "B":
+                    cell = [Cell.BORDER, BORDER_PHER, 0]
+                elif char == "E":
+                    cell = [Cell.EMPTY, 0., 0]
+                elif char == "N":
+                    cell = [Cell.NEST, -2, 0]
+                elif char == "A":
+                    cell = [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
+                elif char == "F":
+                    cell = [Cell.FOOD, -2, 0]
+                elif char == "\n":
+                    continue
+                self.grid[y].append(cell)
+        self.print_grid()
+
 
     # Initialize each cell in grid to become a border, empty or an ant.
     def __init_cell(self, coords):
@@ -103,7 +137,7 @@ class AntsCA():
         elif state == Cell.NEST:
             printchar("N")
         elif state == Cell.FOOD:
-            printchar("A")
+            printchar("F")
 
     # Get coordinates of each cell.
     def __internal_cells(self):
@@ -113,6 +147,7 @@ class AntsCA():
 
     # Iterate one time.
     def __evolve(self):
+        print("evolve")
         self.__sense()
         self.__walk()
 
@@ -161,7 +196,7 @@ class AntsCA():
                 pher_result = -2.
             elif state == Cell.FOOD:
                 # If neighbor is food we change signal to 1 to imply an ant with food.
-                pher_result = -2
+                pher_result = -2.
                 signal = 1
             else:
                 pher_result = npher
@@ -269,8 +304,16 @@ def animate(i):
 
 
 if __name__== "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--preset')
+    args = parser.parse_args()
+
     N = 50
-    ants = AntsCA(N)
+    if args.preset:
+        ants = AntsCA(preset=args.preset)
+    else:
+        ants = AntsCA(N)
+    
     map = [[c[0].value for c in b] for b in ants.grid]
 
     fig = plt.figure(figsize=(25/3, 6.25))
