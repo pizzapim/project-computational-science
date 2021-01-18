@@ -81,7 +81,6 @@ class AntsCA():
                 elif char == "\n":
                     continue
                 self.grid[y].append(cell)
-        self.print_grid()
 
 
     # Initialize each cell in grid to become a border, empty or an ant.
@@ -109,14 +108,14 @@ class AntsCA():
                 self.NEST_COORD = (x,y)
                 self.grid[y][x] = [Cell.NEST, -2, 0]
 
-    # Print Grid. Can be removed.
+    # Print grid in text.
     def print_grid(self):
         for y in range(0, self.N):
             for x in range(0, self.N):
                 self.print_cell(x, y)
             print()
 
-    # Print Cell. Can be removed.
+    # Print cell in text.
     def print_cell(self, x, y):
         [state, _, _] = self.grid[y][x]
         printchar = lambda s: print(s, end="")
@@ -185,7 +184,6 @@ class AntsCA():
         (cx, cy) = self.NEST_COORD
         if signal == 1:
             if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
-                print('next to nest!')
                 if cx > x and self.grid[y][x-1][0] == Cell.EMPTY:
                     directions.append(Cell.WEST)
                 elif cx < x and self.grid[y][x-1][0] == Cell.EMPTY:
@@ -196,7 +194,6 @@ class AntsCA():
                     directions.append(Cell.SOUTH)
                 signal = 0
             else:
-                print("not next to nest cx= ", cx, " cy=", cy)
                 self.__return_direction(cx, cy, x, y, directions, prev)
 
         if signal == 0 or directions == []:
@@ -313,7 +310,6 @@ def animate(i):
     im.set_data(animate.map)
     ants.evolve()
     animate.map = [[c[0].value for c in b] for b in ants.grid]
-    ants.print_grid()
 
 
 if __name__== "__main__":
