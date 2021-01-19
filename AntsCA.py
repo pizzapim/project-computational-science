@@ -31,14 +31,15 @@ class Cell(IntEnum):
 
 
 # Configuration variables
-INIT_ANT_PROB = .05
+INIT_ANT_PROB = .005
 INIT_NEST_PROB = .01
 INIT_FOOD_PROB = .1
 INIT_FOOD_PER_SPOT = 10
 BORDER_PHER = -1.
-PHER_EVAPORATE = .01
+PHER_EVAPORATE = .005
 MAX_NESTS = 1
 MAX_FOOD = 10
+INIT_ANT_SIGNAL = 100
 
 
 class AntsCA():
@@ -200,7 +201,7 @@ class AntsCA():
 
         # If the ant has food, it moves to the nest.
         # If next to a nest and carrying food, the ant turns 180 degrees and loses his food.
-        if signal == 1:
+        if signal > 0:
             if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
                 if cx > x and self.grid[y][x-1][0] == Cell.EMPTY:
                     directions.append(Cell.WEST)
@@ -248,7 +249,7 @@ class AntsCA():
                 # Do not move to a cell already inhabited.
                 pher_result = -2.
             elif state == Cell.FOOD:
-                # If neighbor is food we change signal to 1 to imply an ant with food.
+                # If neighbor is food we set the signal to imply an ant with food.
                 pher_result = -2.
                 if signal == 0:
                     # Take food if ant does not have food already.
@@ -256,7 +257,7 @@ class AntsCA():
                         grid_copy[ny][nx] = [state, npher, nsig - 1]
                     else:
                         grid_copy[ny][nx] = [Cell.EMPTY, 0, 0]
-                    signal = 1
+                    signal = INIT_ANT_SIGNAL
             else:
                 pher_result = npher
 
@@ -314,36 +315,47 @@ class AntsCA():
                 [dstate, _, _] = grid_copy[y][x]
                 grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
             return
-                
+        
         # For each possible direction, attempt to move the ant there.
         # If not possible, stay in place.
+        dx = dy = direction = dpher = None
         moved = False
         if state == Cell.NORTH:
             [dstate, dpher, _] = grid_copy[y-1][x]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
-                grid_copy[y-1][x] = [Cell.SOUTH, dpher, signal]
+                dx = x
+                dy = y-1
+                direction = Cell.SOUTH
                 moved = True
         elif state == Cell.EAST:
             [dstate, dpher, _] = grid_copy[y][x+1]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
-                grid_copy[y][x+1] = [Cell.WEST, dpher, signal]
+                dx = x+1
+                dy = y
+                direction = Cell.WEST
                 moved = True
         elif state == Cell.SOUTH:
             [dstate, dpher, _] = grid_copy[y+1][x]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
-                grid_copy[y+1][x] = [Cell.NORTH, dpher, signal]
+                dx = x
+                dy = y+1
+                direction = Cell.NORTH
                 moved = True
         elif state == Cell.WEST:
             [dstate, dpher, _] = grid_copy[y][x-1]
             if dstate == Cell.EMPTY:
-                grid_copy[y][x] = [Cell.EMPTY, pher, 0]
-                grid_copy[y][x-1] = [Cell.EAST, dpher, signal]
+                dx = x-1
+                dy = y
+                direction = Cell.EAST
                 moved = True
-                
-        if not moved:
+
+        if moved:
+            move_pher = dpher if signal == 0 else signal / INIT_ANT_SIGNAL
+            signal = signal if signal == 0 else signal-1
+
+            grid_copy[y][x] = [Cell.EMPTY, move_pher, 0]
+            grid_copy[dy][dx] = [direction, dpher, signal]
+        else:
             grid_copy[y][x] = [Cell.STAY, pher, signal]
 
 
