@@ -1,7 +1,7 @@
 from Neighborhood import VonNeumannNeighborhood
 
 from enum import IntEnum
-from random import random, randint, choice
+from random import random, randint, choice, randrange
 from copy import deepcopy
 import argparse
 
@@ -31,14 +31,12 @@ class Cell(IntEnum):
 
 
 # Configuration variables
-INIT_ANT_PROB = .005
+INIT_ANT_PROB = .05
 INIT_NEST_PROB = .01
-INIT_FOOD_PROB = .1
-INIT_FOOD_PER_SPOT = 10
+INIT_FOOD_PER_SPOT = 20
+INIT_N_FOOD = 10
 BORDER_PHER = -1.
 PHER_EVAPORATE = .005
-MAX_NESTS = 1
-MAX_FOOD = 10
 INIT_ANT_SIGNAL = 100
 
 
@@ -56,7 +54,7 @@ class AntsCA():
             # If no preset is given, initialize the grid randomly.
             self.N = N
             self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
-            self.__init_food()
+            self.__init_food(N)
 
 
     # Load a file containing a preset grid for debugging and reproducability.
@@ -101,20 +99,17 @@ class AntsCA():
 
 
     # Changes some ants to food and nests.
-    def __init_food(self):
-        for (x, y) in self.__internal_cells():
-            [site, _, _] = self.grid[y][x]
+    def __init_food(self, N):
+        for i in range(INIT_N_FOOD):
+            x = randrange(1, N - 1)
+            y = randrange(1, N - 1)
 
-            if self.FOOD == MAX_FOOD:
-                break
-            elif (random() < INIT_FOOD_PROB) and (site in [Cell.NORTH, Cell.WEST, Cell.EAST, Cell.SOUTH]):
-                self.FOOD += 1
-                self.grid[y][x] = [Cell.FOOD, -2, INIT_FOOD_PER_SPOT]
-            elif (random() < INIT_NEST_PROB) and (self.NESTS < MAX_NESTS):
-                self.NESTS += 1
-                self.NEST_COORD = (x,y)
-                self.grid[y][x] = [Cell.NEST, -2, 0]
+            self.grid[y][x] = [Cell.FOOD, -2, INIT_FOOD_PER_SPOT]
 
+        x = int(N / 2)
+        y = 2
+        self.grid[y][x] = [Cell.NEST, -2, 0]
+        self.NEST_COORD = (x,y)
 
     # Print grid in text.
     def print_grid(self):
