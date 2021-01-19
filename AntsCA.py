@@ -40,6 +40,7 @@ PHER_EVAPORATE = .01
 MAX_NESTS = 1
 MAX_FOOD = 10
 
+
 class AntsCA():
 
     def __init__(self, N=100, neighborhood=VonNeumannNeighborhood(), preset=None):
@@ -51,11 +52,14 @@ class AntsCA():
         if preset:
             self.load_file(preset)
         else:
+            # If no preset is given, initialize the grid randomly.
             self.N = N
             self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
             self.__init_food()
 
 
+    # Load a file containing a preset grid for debugging and reproducability.
+    # Note that the grid must be NxN.
     def load_file(self, preset):
         self.N = None
         with open(preset) as f:
@@ -94,10 +98,11 @@ class AntsCA():
 
         return [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
 
+
     # Changes some ants to food and nests.
     def __init_food(self):
         for (x, y) in self.__internal_cells():
-            [site, pher, signal] = self.grid[y][x]
+            [site, _, _] = self.grid[y][x]
 
             if self.FOOD == MAX_FOOD:
                 break
@@ -109,12 +114,14 @@ class AntsCA():
                 self.NEST_COORD = (x,y)
                 self.grid[y][x] = [Cell.NEST, -2, 0]
 
+
     # Print grid in text.
     def print_grid(self):
         for y in range(0, self.N):
             for x in range(0, self.N):
                 self.print_cell(x, y)
             print()
+
 
     # Print cell in text.
     def print_cell(self, x, y):
@@ -140,20 +147,24 @@ class AntsCA():
         elif state == Cell.FOOD:
             printchar("F")
 
-    # Get coordinates of each cell.
+
+    # Get coordinates of each cell within the borders.
     def __internal_cells(self):
         for y in range(1, self.N-1):
             for x in range(1, self.N-1):
                 yield (x, y)
 
-    # Iterate one time.
+
+    # Advance the CA one time step.
     def evolve(self):
         self.__sense()
         self.__walk()
 
-    # Let every cell sense.
+
+    # Execute the "sense" algorithm from the book on the grid,
+    # which rotates each ant towards the cell it wants to move to.
     def __sense(self):
-        # Might be faster to only accumulate edits instead of deepcopying.
+        # TODO: Might be faster to only accumulate edits instead of deepcopying.
         grid_copy = deepcopy(self.grid)
 
         for (x, y) in self.__internal_cells():
@@ -162,14 +173,17 @@ class AntsCA():
 
         self.grid = grid_copy
 
-    # Every cell senses if its an ant. If it isnt it does nothing.
+
+    # Execute the "sense" algorithm from the book for each cell.
     def __sense_cell(self, x, y, neighbors, grid_copy):
         [site, pher, signal] = self.grid[y][x]
 
-        if site in [Cell.BORDER, Cell.EMPTY, Cell.FOOD, Cell.NEST]:
+        # Skip if the cell does not contain an ant.
+        if site < Cell.NORTH or site > Cell.STAY:
             return
 
-        # The ant faces the way it just came from, but can also be STAY.
+        # At this time he ant faces the way it just came from,
+        # but can also be STAY if it did not move the last time step.
         prev = None
         if site == Cell.NORTH:
             prev = (x, y-1)
@@ -180,9 +194,12 @@ class AntsCA():
         elif site == Cell.EAST:
             prev = (x+1, y)
 
-        # If ant carries food he has to walk in the shortest path to the nest. If in front of nest he moves away from it and leaves his food.
+        # Determine which directions the ant can turn to.
         directions = []
         (cx, cy) = self.NEST_COORD
+
+        # If the ant has food, it moves to the nest.
+        # If next to a nest and carrying food, the ant turns 180 degrees and loses his food.
         if signal == 1:
             if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
                 if cx > x and self.grid[y][x-1][0] == Cell.EMPTY:
@@ -197,9 +214,12 @@ class AntsCA():
             else:
                 self.__return_direction(cx, cy, x, y, directions, prev)
 
+        # If the ant is searching for food, it turns to cells with the highest pheromones.
+        # If the ant has food but cannot move towards the nest this time step, also do this.
         if signal == 0 or directions == []:
             (best, signal) = self.__find_best_neighbor(neighbors, prev, signal, grid_copy)
             if not best:
+                # Could not find a cell to move to, stay in place.
                 grid_copy[y][x] = [Cell.STAY, pher, signal]
                 return
 
@@ -210,6 +230,8 @@ class AntsCA():
         grid_copy[y][x] = [direction, pher, signal]
 
 
+    # Find the neighbor cell with the heighest pheromones to move to.
+    # Also update the signal in case the ant is next to the nest.
     def __find_best_neighbor(self, neighbors, prev, signal, grid_copy):
         max_pher = float('-inf')
         max_cells = []
@@ -254,7 +276,8 @@ class AntsCA():
         return (choice(max_cells), signal)
 
 
-    # This adds the directions to where the point(nx, ny) is relative to the point (x, y)
+    # Update the directions list with directions the ant can go to
+    # in order to reach the given goal.
     def __return_direction(self, nx, ny, x, y, directions, prev=None):
         if nx > x and self.grid[y][x+1][0] == Cell.EMPTY and (x+1, y) != prev:
             directions.append(Cell.EAST)
@@ -266,6 +289,9 @@ class AntsCA():
             directions.append(Cell.NORTH)
 
 
+    # Execute the "walk" algorithm from the book for the grid.
+    # This moves the ants towards the cell they turned to, if possible.
+    # Also update the pheromones for each cell.
     def __walk(self):
         grid_copy = deepcopy(self.grid)
 
@@ -275,44 +301,53 @@ class AntsCA():
         self.grid = grid_copy
 
 
+    # Execute the "walk" algorithm from the book for each cell.
     def __walk_cell(self, x, y, grid_copy):
         [state, pher, signal] = self.grid[y][x]
 
-        # TODO: reinforce the trail? (rule 10)
+        if state in [Cell.NEST, Cell.FOOD]:
+            return
+
         if state == Cell.EMPTY:
+            # If the cell is empty, update its pheromones.
             if grid_copy[y][x][0] == Cell.EMPTY:
                 [dstate, _, _] = grid_copy[y][x]
                 grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
+            return
+                
+        # For each possible direction, attempt to move the ant there.
+        # If not possible, stay in place.
+        moved = False
         if state == Cell.NORTH:
             [dstate, dpher, _] = grid_copy[y-1][x]
             if dstate == Cell.EMPTY:
                 grid_copy[y][x] = [Cell.EMPTY, pher, 0]
                 grid_copy[y-1][x] = [Cell.SOUTH, dpher, signal]
-            else:
-                grid_copy[y][x] = [Cell.STAY, pher, signal]
+                moved = True
         elif state == Cell.EAST:
             [dstate, dpher, _] = grid_copy[y][x+1]
             if dstate == Cell.EMPTY:
                 grid_copy[y][x] = [Cell.EMPTY, pher, 0]
                 grid_copy[y][x+1] = [Cell.WEST, dpher, signal]
-            else:
-                grid_copy[y][x] = [Cell.STAY, pher, signal]
+                moved = True
         elif state == Cell.SOUTH:
             [dstate, dpher, _] = grid_copy[y+1][x]
             if dstate == Cell.EMPTY:
                 grid_copy[y][x] = [Cell.EMPTY, pher, 0]
                 grid_copy[y+1][x] = [Cell.NORTH, dpher, signal]
-            else:
-                grid_copy[y][x] = [Cell.STAY, pher, signal]
+                moved = True
         elif state == Cell.WEST:
             [dstate, dpher, _] = grid_copy[y][x-1]
             if dstate == Cell.EMPTY:
                 grid_copy[y][x] = [Cell.EMPTY, pher, 0]
                 grid_copy[y][x-1] = [Cell.EAST, dpher, signal]
-            else:
-                grid_copy[y][x] = [Cell.STAY, pher, signal]
+                moved = True
+                
+        if not moved:
+            grid_copy[y][x] = [Cell.STAY, pher, signal]
 
-# Iterate one stap and animate it.
+
+# Advance one time step and draw the CA.
 def animate(i):
     im.set_data(animate.map)
     ants.evolve()
