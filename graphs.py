@@ -44,7 +44,7 @@ def graph_on_pher_time(iteration, on_pher):
     plt.show()
 
 if __name__== "__main__":
-    ani = True
+    ani = False
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
@@ -70,6 +70,14 @@ if __name__== "__main__":
         interval = 50
         anim = animation.FuncAnimation(fig, animate, interval=interval)
         plt.show()
+
+        iteration = [i[0] for i in ants.counter]
+        food = [i[1] for i in ants.counter]
+        on_pher = [i[2] for i in ants.counter]
+
+        graph_food_time(iteration, food)
+        graph_on_pher_time(iteration, on_pher)
+
     else:
         all_variables = []
         # if we want to look at the mean of food or something we need to change range to higher.
