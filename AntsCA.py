@@ -3,20 +3,15 @@ from Neighborhood import VonNeumannNeighborhood
 from enum import IntEnum
 from random import random, randint, choice, randrange
 from copy import deepcopy
-import argparse
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import animation
-from matplotlib import colors
-
-
-# Note that for the colormap to work, this list and the bounds list
-# must be one larger than the number of different values in the array.
-colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'orange', 'green']
-cmap = colors.ListedColormap(colors_list)
-bounds = [0,1,2,3,4,5,6,7,8,9]
-norm = colors.BoundaryNorm(bounds, cmap.N)
+# Configuration variables
+INIT_ANT_PROB = .05
+INIT_NEST_PROB = .01
+# INIT_FOOD_PER_SPOT = 10
+# INIT_N_FOOD = 20
+BORDER_PHER = -1.
+PHER_EVAPORATE = .005
+INIT_ANT_SIGNAL = 100
 
 class Cell(IntEnum):
     EMPTY = 0,
@@ -30,23 +25,17 @@ class Cell(IntEnum):
     FOOD = 8
 
 
-# Configuration variables
-INIT_ANT_PROB = .05
-INIT_NEST_PROB = .01
-INIT_FOOD_PER_SPOT = 20
-INIT_N_FOOD = 10
-BORDER_PHER = -1.
-PHER_EVAPORATE = .005
-INIT_ANT_SIGNAL = 100
-
-
 class AntsCA():
 
     def __init__(self, N=100, neighborhood=VonNeumannNeighborhood(), preset=None):
+        self.INIT_FOOD_PER_SPOT = 10
+        self.INIT_N_FOOD = 20
+
         self.NESTS = 0
-        self.FOOD = 0
+        self.FOOD_IN_NEST = 0
         self.__neighborhood = neighborhood
         self.NEST_COORD = (0,0)
+        self.counter = [[0,0,0]]
 
         if preset:
             self.load_file(preset)
@@ -81,7 +70,7 @@ class AntsCA():
                 elif char == "A":
                     cell = [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
                 elif char == "F":
-                    cell = [Cell.FOOD, -2, INIT_FOOD_PER_SPOT]
+                    cell = [Cell.FOOD, -2, self.INIT_FOOD_PER_SPOT]
                 elif char == "\n":
                     continue
                 self.grid[y].append(cell)
@@ -98,18 +87,21 @@ class AntsCA():
         return [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
 
 
-    # Changes some ants to food and nests.
+    # Initializing food and nest.
     def __init_food(self, N):
-        for i in range(INIT_N_FOOD):
-            x = randrange(1, N - 1)
-            y = randrange(1, N - 1)
-
-            self.grid[y][x] = [Cell.FOOD, -2, INIT_FOOD_PER_SPOT]
-
         x = int(N / 2)
         y = 2
         self.grid[y][x] = [Cell.NEST, -2, 0]
         self.NEST_COORD = (x,y)
+
+        n_food = 0
+        while n_food < self.INIT_N_FOOD:
+            x = randrange(1, N - 1)
+            y = randrange(1, N - 1)
+
+            if self.grid[y][x][0] == Cell.EMPTY:
+                self.grid[y][x] = [Cell.FOOD, -2, self.INIT_FOOD_PER_SPOT]
+                n_food += 1
 
     # Print grid in text.
     def print_grid(self):
@@ -155,7 +147,7 @@ class AntsCA():
     def evolve(self):
         self.__sense()
         self.__walk()
-
+        self.__count()
 
     # Execute the "sense" algorithm from the book on the grid,
     # which rotates each ant towards the cell it wants to move to.
@@ -198,6 +190,8 @@ class AntsCA():
         # If next to a nest and carrying food, the ant turns 180 degrees and loses his food.
         if signal > 0:
             if (abs(cx-x) == 0 or abs(cy-y) == 0) and (abs(cx+cy-x-y) == 1):
+                # Increment the signal in the nest, indicating food collected.
+                grid_copy[cy][cx][2] += 1
                 if cx > x and self.grid[y][x-1][0] == Cell.EMPTY:
                     directions.append(Cell.WEST)
                 elif cx < x and self.grid[y][x-1][0] == Cell.EMPTY:
@@ -206,7 +200,9 @@ class AntsCA():
                     directions.append(Cell.NORTH)
                 elif cy < y and self.grid[y-1][x][0] == Cell.EMPTY:
                     directions.append(Cell.SOUTH)
+
                 signal = 0
+                print(grid_copy[cy][cx][2])
             else:
                 self.__return_direction(cx, cy, x, y, directions, prev)
 
@@ -249,6 +245,7 @@ class AntsCA():
                 if signal == 0:
                     # Take food if ant does not have food already.
                     if (nsig - 1) > 0:
+                        self.grid[ny][nx][2] -= 1
                         grid_copy[ny][nx] = [state, npher, nsig - 1]
                     else:
                         grid_copy[ny][nx] = [Cell.EMPTY, 0, 0]
@@ -310,7 +307,7 @@ class AntsCA():
                 [dstate, _, _] = grid_copy[y][x]
                 grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
             return
-        
+
         # For each possible direction, attempt to move the ant there.
         # If not possible, stay in place.
         dx = dy = direction = dpher = None
@@ -345,42 +342,26 @@ class AntsCA():
                 moved = True
 
         if moved:
-            move_pher = dpher if signal == 0 else signal / INIT_ANT_SIGNAL
-            signal = signal if signal == 0 else signal-1
+            move_pher = dpher if signal <= 0 else signal / INIT_ANT_SIGNAL
+            signal = signal if signal <= 1 else signal-1
 
             grid_copy[y][x] = [Cell.EMPTY, move_pher, 0]
             grid_copy[dy][dx] = [direction, dpher, signal]
         else:
             grid_copy[y][x] = [Cell.STAY, pher, signal]
 
+    # Count variables of AntsCA for graphs.
+    def __count(self):
+        iteration = self.counter[-1][0] + 1
 
-# Advance one time step and draw the CA.
-def animate(i):
-    im.set_data(animate.map)
-    ants.evolve()
-    animate.map = [[c[0].value for c in b] for b in ants.grid]
+        (cx, cy) = self.NEST_COORD
+        food = self.grid[cy][cx][2]
 
+        # Should be incorperated in sense to reduce computation.
+        on_pher = 0
+        for (x, y) in self.__internal_cells():
+            [site, pher, signal] = self.grid[y][x]
+            if site >= Cell.NORTH and site <= Cell.STAY and pher > 0:
+                on_pher += 1
 
-if __name__== "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--preset')
-    args = parser.parse_args()
-
-    N = 50
-    if args.preset:
-        ants = AntsCA(preset=args.preset)
-    else:
-        ants = AntsCA(N)
-
-    map = [[c[0].value for c in b] for b in ants.grid]
-
-    fig = plt.figure(figsize=(25/3, 6.25))
-    ax = fig.add_subplot(111)
-    ax.set_axis_off()
-    im = ax.imshow(map, cmap=cmap, norm=norm)#, interpolation='nearest')
-    animate.map = map
-
-    # Interval between frames (ms).
-    interval = 50
-    anim = animation.FuncAnimation(fig, animate, interval=interval)
-    plt.show()
+        self.counter.append([iteration, food, on_pher])
