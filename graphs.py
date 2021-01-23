@@ -22,11 +22,6 @@ def animate(i):
     animate.map = [[c[0].value for c in b] for b in ants.grid]
 
 if __name__== "__main__":
-<<<<<<< HEAD
-    ani = False
-
-=======
->>>>>>> 2d3196e2fa460021f631e76aa072f1d7838d5585
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
     parser.add_argument('--no-graphs', action='store_true')
@@ -72,7 +67,6 @@ if __name__== "__main__":
 
         for e in evap_rate_vals:
             ants = AntsCA(N)
-<<<<<<< HEAD
             ants.PHER_EVAPORATE = e
             for j in range(10):
                 while True:
@@ -100,38 +94,17 @@ if __name__== "__main__":
             pher_list = np.asarray([i[1][:min(it_needed)] for i in all_variables]).mean(axis=0)
             all_pher.append(pher_list)
 
-        fig, axs = plt.subplots(ncols=2, figsize=(18,6), sharey=True)
-
-        for p, c in zip(all_pher, ['blue', 'green']):
-            axs[0].plot(np.arange(len(p)), p)
-            # ax1.fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color=c)
-        axs[0].set_title('Median evaporation')
-        axs[0].set(xlabel='Iterations', ylabel='Evaporation rate')
-
-        axs[1].plot(evap_rate_vals, it_vals)
-        axs[1].fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color="green")
-        axs[1].set_title('Median iteration')
-        axs[1].set(xlabel='Evaporation rate', ylabel='Iterations')
-        plt.show()
-=======
-            print('hoi')
-            while True:
-                ants.evolve()
-                (cx, cy) = ants.NEST_COORD
-                food = ants.grid[cy][cx][2]
-                if food == ants.INIT_FOOD_PER_SPOT * ants.INIT_N_FOOD:
-                    break
-
-            iteration = [i[0] for i in ants.counter]
-            food = [i[1] for i in ants.counter]
-            on_pher = [i[2] for i in ants.counter]
-
-            np.array(all_variables.append([iteration, food, on_pher]))
-    
-        mean_food = np.asarray([i[1] for i in all_variables]).mean(axis=0)
-        mean_pher = np.asarray([i[2] for i in all_variables]).mean(axis=0)
-
         if not args.no_graphs:
-            graph_food_time(iteration, mean_food)
-            graph_on_pher_time(iteration, mean_pher)
->>>>>>> 2d3196e2fa460021f631e76aa072f1d7838d5585
+            fig, axs = plt.subplots(ncols=2, figsize=(18,6), sharey=True)
+
+            for p, c in zip(all_pher, ['blue', 'green']):
+                axs[0].plot(np.arange(len(p)), p)
+                # ax1.fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color=c)
+            axs[0].set_title('Median evaporation')
+            axs[0].set(xlabel='Iterations', ylabel='Evaporation rate')
+
+            axs[1].plot(evap_rate_vals, it_vals)
+            axs[1].fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color="green")
+            axs[1].set_title('Median iteration')
+            axs[1].set(xlabel='Evaporation rate', ylabel='Iterations')
+            plt.show()
