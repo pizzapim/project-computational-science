@@ -5,10 +5,6 @@ from random import random, randint, choice, randrange
 from copy import deepcopy
 
 # Configuration variables
-INIT_ANT_PROB = .05
-INIT_NEST_PROB = .01
-# INIT_FOOD_PER_SPOT = 10
-# INIT_N_FOOD = 20
 BORDER_PHER = -1.
 PHER_EVAPORATE = .005
 INIT_ANT_SIGNAL = 100
@@ -27,7 +23,7 @@ class Cell(IntEnum):
 
 class AntsCA():
 
-    def __init__(self, N=100, neighborhood=VonNeumannNeighborhood(), preset=None):
+    def __init__(self, N=100, ants_count=100, neighborhood=VonNeumannNeighborhood(), preset=None):
         self.INIT_FOOD_PER_SPOT = 10
         self.INIT_N_FOOD = 20
 
@@ -36,6 +32,7 @@ class AntsCA():
         self.__neighborhood = neighborhood
         self.NEST_COORD = (0,0)
         self.counter = [[0,0,0]]
+        self.ants_count = ants_count
 
         if preset:
             self.load_file(preset)
@@ -43,7 +40,7 @@ class AntsCA():
             # If no preset is given, initialize the grid randomly.
             self.N = N
             self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
-            self.__init_food(N)
+            self.__init_food()
 
 
     # Load a file containing a preset grid for debugging and reproducability.
@@ -76,32 +73,40 @@ class AntsCA():
                 self.grid[y].append(cell)
 
 
-    # Initialize each cell in grid to become a border, empty or an ant.
+    # Initialize each cell in grid the grid to become border or empty.
     def __init_cell(self, coords):
         if 0 in coords or self.N-1 in coords:
             return [Cell.BORDER, BORDER_PHER, 0]
 
-        if random() > INIT_ANT_PROB:
-            return [Cell.EMPTY, 0., 0]
-
-        return [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
+        return [Cell.EMPTY, 0., 0]
 
 
-    # Initializing food and nest.
-    def __init_food(self, N):
-        x = int(N / 2)
+    # Initializing the nest, food cells and ants.
+    def __init_food(self):
+        x = int(self.N / 2)
         y = 2
         self.grid[y][x] = [Cell.NEST, -2, 0]
         self.NEST_COORD = (x,y)
 
+        # Randomly place food cells.
         n_food = 0
         while n_food < self.INIT_N_FOOD:
-            x = randrange(1, N - 1)
-            y = randrange(1, N - 1)
+            x = randrange(1, self.N - 1)
+            y = randrange(1, self.N - 1)
 
             if self.grid[y][x][0] == Cell.EMPTY:
                 self.grid[y][x] = [Cell.FOOD, -2, self.INIT_FOOD_PER_SPOT]
                 n_food += 1
+                
+        n_ants = 0
+        while n_ants < self.ants_count:
+            x = randrange(1, self.N - 1)
+            y = randrange(1, self.N - 1)
+
+            if self.grid[y][x][0] == Cell.EMPTY:
+                cell = Cell(randint(Cell.NORTH, Cell.WEST))
+                self.grid[y][x] = [cell, 0., 0]
+                n_ants += 1
 
     # Print grid in text.
     def print_grid(self):
@@ -360,7 +365,7 @@ class AntsCA():
         # Should be incorperated in sense to reduce computation.
         on_pher = 0
         for (x, y) in self.__internal_cells():
-            [site, pher, signal] = self.grid[y][x]
+            [site, pher, _] = self.grid[y][x]
             if site >= Cell.NORTH and site <= Cell.STAY and pher > 0:
                 on_pher += 1
 

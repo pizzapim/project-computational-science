@@ -44,7 +44,7 @@ def graph_on_pher_time(iteration, on_pher):
     plt.show()
 
 if __name__== "__main__":
-    ani = False
+    ani = True
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
