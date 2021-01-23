@@ -6,7 +6,7 @@ from copy import deepcopy
 
 
 class Cell(IntEnum):
-    EMPTY = 0,
+    FOOD = 0,
     NORTH = 1,
     EAST = 2,
     SOUTH = 3,
@@ -14,7 +14,7 @@ class Cell(IntEnum):
     STAY = 5,
     BORDER = 6,
     NEST = 7,
-    FOOD = 8
+    EMPTY = 8
 
 
 class AntsCA():

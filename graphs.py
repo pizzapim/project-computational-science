@@ -4,40 +4,46 @@ import argparse
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from matplotlib import colors
+from matplotlib import cm
 
 import numpy as np
 
 
-# Note that for the colormap to work, this list and the bounds list
-# must be one larger than the number of different values in the array.
-colors_list = ['white', 'brown', 'brown', 'brown', 'brown', 'brown', 'black', 'orange', 'green']
-cmap = colors.ListedColormap(colors_list)
-bounds = [0,1,2,3,4,5,6,7,8,9]
-norm = colors.BoundaryNorm(bounds, cmap.N)
+# Really hacky but mixing qualitative & quantitative color maps is annoying.
+viridis = cm.get_cmap('Greys', 100)
+newcolors = viridis(np.linspace(0, 1, 100))
+newcolors[0:5] = [0.00,1.00,0.16,1]
+newcolors[6:55] = [0.60,0.20,0.00,1]
+newcolors[56:65] = [0,0,0,1]
+newcolors[66:75] = [1.00,1.00,0.10,1]
+newcolors[76:100] = viridis(np.linspace(0, 1, 48)[0:24])
+newcmp = colors.ListedColormap(newcolors)
 
 # Advance one time step and draw the CA.
 def animate(i):
     im.set_data(animate.map)
     ants.evolve()
-    animate.map = [[c[0].value for c in b] for b in ants.grid]
+    animate.map = [[c[0].value / 10. + (c[1]/5. if c[0] == Cell.EMPTY else 0) for c in b] for b in ants.grid]
+    print(animate.map)
 
-def graph_food_time(iteration, food):	def graph_food_time(iteration, food):
-    # Plot the amount of food over iterations.	    # Plot the amount of food over iterations.
-    plt.figure(figsize=(15,5))	    plt.figure(figsize=(15,5))
-    plt.plot(iteration, food)	    plt.plot(iteration, food)
-    # Add labels to the plots.	    # Add labels to the plots.
-    plt.ylabel("Amount of food in the nest.")	    plt.ylabel("Amount of food in the nest.")
-    plt.xlabel("Iteration")	    plt.xlabel("Iteration")
-    plt.title("Amount of food in nest over time.")	    plt.title("Amount of food in nest over time.")
-    plt.show()	    plt.show()
-def graph_on_pher_time(iteration, on_pher):	def graph_on_pher_time(iteration, on_pher):
-    # Plot the amount of food over iterations.	    # Plot the amount of food over iterations.
-    plt.figure(figsize=(15,5))	    plt.figure(figsize=(15,5))
-    plt.plot(iteration, on_pher)	    plt.plot(iteration, on_pher)
-    # Add labels to the plots.	    # Add labels to the plots.
-    plt.ylabel("Amount of ants on a pheromone trail.")	    plt.ylabel("Amount of ants on a pheromone trail.")
-    plt.xlabel("Iteration")	    plt.xlabel("Iteration")
-    plt.title("Amount of ants on a pheromone trail over time.")	    plt.title("Amount of ants on a pheromone trail over time.")
+def graph_food_time(iteration, food):
+    # Plot the amount of food over iterations.
+    plt.figure(figsize=(15,5))
+    plt.plot(iteration, food)
+    # Add labels to the plots.
+    plt.ylabel("Amount of food in the nest.")
+    plt.xlabel("Iteration")
+    plt.title("Amount of food in nest over time.")
+    plt.show()
+
+def graph_on_pher_time(iteration, on_pher):
+    # Plot the amount of food over iterations.
+    plt.figure(figsize=(15,5))
+    plt.plot(iteration, on_pher)
+    # Add labels to the plots.
+    plt.ylabel("Amount of ants on a pheromone trail.")
+    plt.xlabel("Iteration")
+    plt.title("Amount of ants on a pheromone trail over time.")
     plt.show()
 
 if __name__== "__main__":
@@ -54,12 +60,12 @@ if __name__== "__main__":
         ants = AntsCA(N)
 
     if args.animate:
-        mapping = [[c[0].value for c in b] for b in ants.grid]
+        mapping = [[c[0].value / 10. + (c[1]/5. if c[0] == Cell.EMPTY else 0) for c in b] for b in ants.grid]
 
         fig = plt.figure(figsize=(25/3, 6.25))
         ax = fig.add_subplot(111)
         ax.set_axis_off()
-        im = ax.imshow(mapping, cmap=cmap, norm=norm)#, interpolation='nearest')
+        im = ax.imshow(mapping, cmap=newcmp, vmin=0, vmax=1)#, interpolation='nearest')
         animate.map = mapping
 
         # Interval between frames (ms).
