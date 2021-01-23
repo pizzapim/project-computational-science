@@ -4,10 +4,6 @@ from enum import IntEnum
 from random import random, randint, choice, randrange
 from copy import deepcopy
 
-# Configuration variables
-BORDER_PHER = -1.
-PHER_EVAPORATE = .005
-INIT_ANT_SIGNAL = 100
 
 class Cell(IntEnum):
     EMPTY = 0,
@@ -22,12 +18,15 @@ class Cell(IntEnum):
 
 
 class AntsCA():
+    # Configuration variables
+    BORDER_PHER = -1.
+    FOOD_PHER = -2
+    PHER_EVAPORATE = .005
+    INIT_ANT_SIGNAL = 100
+    INIT_FOOD_PER_SPOT = 10
+    INIT_N_FOOD = 20
 
     def __init__(self, N=100, ants_count=100, neighborhood=VonNeumannNeighborhood(), preset=None):
-        self.INIT_FOOD_PER_SPOT = 10
-        self.INIT_N_FOOD = 20
-
-        self.NESTS = 0
         self.FOOD_IN_NEST = 0
         self.__neighborhood = neighborhood
         self.NEST_COORD = (0,0)
@@ -40,7 +39,7 @@ class AntsCA():
             # If no preset is given, initialize the grid randomly.
             self.N = N
             self.grid = [[self.__init_cell((x, y)) for x in range(0, N)] for y in range(0, N)]
-            self.__init_food()
+            self.__populate_grid()
 
 
     # Load a file containing a preset grid for debugging and reproducability.
@@ -58,7 +57,7 @@ class AntsCA():
 
             for x, char in enumerate(line):
                 if char == "B":
-                    cell = [Cell.BORDER, BORDER_PHER, 0]
+                    cell = [Cell.BORDER, self.BORDER_PHER, 0]
                 elif char == "E":
                     cell = [Cell.EMPTY, 0., 0]
                 elif char == "N":
@@ -67,7 +66,7 @@ class AntsCA():
                 elif char == "A":
                     cell = [Cell(randint(Cell.NORTH, Cell.WEST)), 0., 0]
                 elif char == "F":
-                    cell = [Cell.FOOD, -2, self.INIT_FOOD_PER_SPOT]
+                    cell = [Cell.FOOD, self.FOOD_PHER, self.INIT_FOOD_PER_SPOT]
                 elif char == "\n":
                     continue
                 self.grid[y].append(cell)
@@ -76,13 +75,13 @@ class AntsCA():
     # Initialize each cell in grid the grid to become border or empty.
     def __init_cell(self, coords):
         if 0 in coords or self.N-1 in coords:
-            return [Cell.BORDER, BORDER_PHER, 0]
+            return [Cell.BORDER, self.BORDER_PHER, 0]
 
         return [Cell.EMPTY, 0., 0]
 
 
     # Initializing the nest, food cells and ants.
-    def __init_food(self):
+    def __populate_grid(self):
         x = int(self.N / 2)
         y = 2
         self.grid[y][x] = [Cell.NEST, -2, 0]
@@ -95,9 +94,9 @@ class AntsCA():
             y = randrange(1, self.N - 1)
 
             if self.grid[y][x][0] == Cell.EMPTY:
-                self.grid[y][x] = [Cell.FOOD, -2, self.INIT_FOOD_PER_SPOT]
+                self.grid[y][x] = [Cell.FOOD, self.FOOD_PHER, self.INIT_FOOD_PER_SPOT]
                 n_food += 1
-                
+
         n_ants = 0
         while n_ants < self.ants_count:
             x = randrange(1, self.N - 1)
@@ -157,7 +156,6 @@ class AntsCA():
     # Execute the "sense" algorithm from the book on the grid,
     # which rotates each ant towards the cell it wants to move to.
     def __sense(self):
-        # TODO: Might be faster to only accumulate edits instead of deepcopying.
         grid_copy = deepcopy(self.grid)
 
         for (x, y) in self.__internal_cells():
@@ -254,7 +252,7 @@ class AntsCA():
                         grid_copy[ny][nx] = [state, npher, nsig - 1]
                     else:
                         grid_copy[ny][nx] = [Cell.EMPTY, 0, 0]
-                    signal = INIT_ANT_SIGNAL
+                    signal = self.INIT_ANT_SIGNAL
             else:
                 pher_result = npher
 
@@ -310,7 +308,7 @@ class AntsCA():
             # If the cell is empty, update its pheromones.
             if grid_copy[y][x][0] == Cell.EMPTY:
                 [dstate, _, _] = grid_copy[y][x]
-                grid_copy[y][x] = [dstate, max(0., pher-PHER_EVAPORATE), 0]
+                grid_copy[y][x] = [dstate, max(0., pher- self.PHER_EVAPORATE), 0]
             return
 
         # For each possible direction, attempt to move the ant there.
@@ -347,7 +345,7 @@ class AntsCA():
                 moved = True
 
         if moved:
-            move_pher = dpher if signal <= 0 else signal / INIT_ANT_SIGNAL
+            move_pher = dpher if signal <= 0 else signal / self.INIT_ANT_SIGNAL
             signal = signal if signal <= 1 else signal-1
 
             grid_copy[y][x] = [Cell.EMPTY, move_pher, 0]
