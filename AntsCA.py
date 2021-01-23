@@ -24,13 +24,13 @@ class AntsCA():
     PHER_EVAPORATE = .005
     INIT_ANT_SIGNAL = 100
     INIT_FOOD_PER_SPOT = 10
-    INIT_N_FOOD = 20
+    INIT_N_FOOD = 10
 
     def __init__(self, N=100, ants_count=100, neighborhood=VonNeumannNeighborhood(), preset=None):
         self.FOOD_IN_NEST = 0
         self.__neighborhood = neighborhood
         self.NEST_COORD = (0,0)
-        self.counter = [[0,0,0]]
+        self.counter = [[0,0]]
         self.ants_count = ants_count
 
         if preset:
@@ -355,7 +355,6 @@ class AntsCA():
 
     # Count variables of AntsCA for graphs.
     def __count(self):
-        iteration = self.counter[-1][0] + 1
 
         (cx, cy) = self.NEST_COORD
         food = self.grid[cy][cx][2]
@@ -367,4 +366,4 @@ class AntsCA():
             if site >= Cell.NORTH and site <= Cell.STAY and pher > 0:
                 on_pher += 1
 
-        self.counter.append([iteration, food, on_pher])
+        self.counter.append([food, on_pher])
