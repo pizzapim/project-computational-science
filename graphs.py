@@ -21,6 +21,25 @@ def animate(i):
     ants.evolve()
     animate.map = [[c[0].value for c in b] for b in ants.grid]
 
+def graph_food_time(iteration, food):	def graph_food_time(iteration, food):
+    # Plot the amount of food over iterations.	    # Plot the amount of food over iterations.
+    plt.figure(figsize=(15,5))	    plt.figure(figsize=(15,5))
+    plt.plot(iteration, food)	    plt.plot(iteration, food)
+    # Add labels to the plots.	    # Add labels to the plots.
+    plt.ylabel("Amount of food in the nest.")	    plt.ylabel("Amount of food in the nest.")
+    plt.xlabel("Iteration")	    plt.xlabel("Iteration")
+    plt.title("Amount of food in nest over time.")	    plt.title("Amount of food in nest over time.")
+    plt.show()	    plt.show()
+def graph_on_pher_time(iteration, on_pher):	def graph_on_pher_time(iteration, on_pher):
+    # Plot the amount of food over iterations.	    # Plot the amount of food over iterations.
+    plt.figure(figsize=(15,5))	    plt.figure(figsize=(15,5))
+    plt.plot(iteration, on_pher)	    plt.plot(iteration, on_pher)
+    # Add labels to the plots.	    # Add labels to the plots.
+    plt.ylabel("Amount of ants on a pheromone trail.")	    plt.ylabel("Amount of ants on a pheromone trail.")
+    plt.xlabel("Iteration")	    plt.xlabel("Iteration")
+    plt.title("Amount of ants on a pheromone trail over time.")	    plt.title("Amount of ants on a pheromone trail over time.")
+    plt.show()
+
 if __name__== "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
@@ -48,9 +67,9 @@ if __name__== "__main__":
         anim = animation.FuncAnimation(fig, animate, interval=interval)
         plt.show()
 
-        iteration = [i[0] for i in ants.counter]
         food = [i[1] for i in ants.counter]
         on_pher = [i[2] for i in ants.counter]
+        iteration = [i for i in range(len(on_pher))]
 
         if not args.no_graphs:
             graph_food_time(iteration, food)
@@ -63,7 +82,7 @@ if __name__== "__main__":
         it_vals_lower = []
         it_vals_upper = []
         # if we want to look at the mean of food or something we need to change range to higher.
-        evap_rate_vals = np.linspace(0.001, 0.0099, 2)
+        evap_rate_vals = np.linspace(0.001, 0.0099, 10)
 
         for e in evap_rate_vals:
             for j in range(10):
