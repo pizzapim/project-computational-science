@@ -44,10 +44,10 @@ def graph_on_pher_time(iteration, on_pher):
     plt.show()
 
 if __name__== "__main__":
-    ani = True
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
+    parser.add_argument('--no-graphs', action='store_true')
+    parser.add_argument('--animate', action='store_true')
     args = parser.parse_args()
 
     N = 50
@@ -56,8 +56,7 @@ if __name__== "__main__":
     else:
         ants = AntsCA(N)
 
-    # geanimeerd
-    if ani:
+    if args.animate:
         mapping = [[c[0].value for c in b] for b in ants.grid]
 
         fig = plt.figure(figsize=(25/3, 6.25))
@@ -75,8 +74,9 @@ if __name__== "__main__":
         food = [i[1] for i in ants.counter]
         on_pher = [i[2] for i in ants.counter]
 
-        graph_food_time(iteration, food)
-        graph_on_pher_time(iteration, on_pher)
+        if not args.no_graphs:
+            graph_food_time(iteration, food)
+            graph_on_pher_time(iteration, on_pher)
 
     else:
         all_variables = []
@@ -100,5 +100,6 @@ if __name__== "__main__":
         mean_food = np.asarray([i[1] for i in all_variables]).mean(axis=0)
         mean_pher = np.asarray([i[2] for i in all_variables]).mean(axis=0)
 
-        graph_food_time(iteration, mean_food)
-        graph_on_pher_time(iteration, mean_pher)
+        if not args.no_graphs:
+            graph_food_time(iteration, mean_food)
+            graph_on_pher_time(iteration, mean_pher)
