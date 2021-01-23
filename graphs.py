@@ -66,9 +66,9 @@ if __name__== "__main__":
         evap_rate_vals = np.linspace(0.001, 0.0099, 2)
 
         for e in evap_rate_vals:
-            ants = AntsCA(N)
-            ants.PHER_EVAPORATE = e
             for j in range(10):
+                ants = AntsCA(N)
+                ants.PHER_EVAPORATE = e
                 while True:
                     ants.evolve()
                     (cx, cy) = ants.NEST_COORD
