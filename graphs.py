@@ -22,10 +22,15 @@ def animate(i):
     animate.map = [[c[0].value for c in b] for b in ants.grid]
 
 if __name__== "__main__":
+<<<<<<< HEAD
     ani = False
 
+=======
+>>>>>>> 2d3196e2fa460021f631e76aa072f1d7838d5585
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
+    parser.add_argument('--no-graphs', action='store_true')
+    parser.add_argument('--animate', action='store_true')
     args = parser.parse_args()
 
     N = 50
@@ -34,8 +39,7 @@ if __name__== "__main__":
     else:
         ants = AntsCA(N)
 
-    # geanimeerd
-    if ani:
+    if args.animate:
         mapping = [[c[0].value for c in b] for b in ants.grid]
 
         fig = plt.figure(figsize=(25/3, 6.25))
@@ -53,8 +57,9 @@ if __name__== "__main__":
         food = [i[1] for i in ants.counter]
         on_pher = [i[2] for i in ants.counter]
 
-        graph_food_time(iteration, food)
-        graph_on_pher_time(iteration, on_pher)
+        if not args.no_graphs:
+            graph_food_time(iteration, food)
+            graph_on_pher_time(iteration, on_pher)
 
     else:
         all_variables = []
@@ -67,6 +72,7 @@ if __name__== "__main__":
 
         for e in evap_rate_vals:
             ants = AntsCA(N)
+<<<<<<< HEAD
             ants.PHER_EVAPORATE = e
             for j in range(10):
                 while True:
@@ -107,3 +113,25 @@ if __name__== "__main__":
         axs[1].set_title('Median iteration')
         axs[1].set(xlabel='Evaporation rate', ylabel='Iterations')
         plt.show()
+=======
+            print('hoi')
+            while True:
+                ants.evolve()
+                (cx, cy) = ants.NEST_COORD
+                food = ants.grid[cy][cx][2]
+                if food == ants.INIT_FOOD_PER_SPOT * ants.INIT_N_FOOD:
+                    break
+
+            iteration = [i[0] for i in ants.counter]
+            food = [i[1] for i in ants.counter]
+            on_pher = [i[2] for i in ants.counter]
+
+            np.array(all_variables.append([iteration, food, on_pher]))
+    
+        mean_food = np.asarray([i[1] for i in all_variables]).mean(axis=0)
+        mean_pher = np.asarray([i[2] for i in all_variables]).mean(axis=0)
+
+        if not args.no_graphs:
+            graph_food_time(iteration, mean_food)
+            graph_on_pher_time(iteration, mean_pher)
+>>>>>>> 2d3196e2fa460021f631e76aa072f1d7838d5585
