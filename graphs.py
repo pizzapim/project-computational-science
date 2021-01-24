@@ -45,6 +45,48 @@ def graph_on_pher_time(iteration, on_pher):
     plt.title("Amount of ants on a pheromone trail over time.")
     plt.show()
 
+def graph_ants_evap_iterate(all_pher):
+    plt.figure(figsize=(15,5))
+    for p in all_pher:
+        plt.plot(np.arange(len(p)), p)
+    plt.xlabel('Iterations')
+    plt.ylabel('Ants on pheromone trail')
+    plt.title('Mean of ants on pheromone trail per iteration')
+    plt.show()
+
+def graphs_iteration_per_evap(it_needed):
+    std_len = np.std(it_needed)
+    mean_len = np.mean(it_needed)
+    it_vals.append(mean_len)
+    it_vals_lower.append(mean_len - std_len)
+    it_vals_upper.append(mean_len + std_len)
+
+    plt.figure(figsize=(15,5))
+
+    plt.plot(evap_rate_vals, it_vals)
+    plt.fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color="green")
+    plt.title('Mean iteration per evaporation rate')
+    plt.xlabel('Evaporation rate')
+    plt.ylabel('Iterations')
+    plt.show()
+
+def graphs_iteration_per_evap_diff(it_needed):
+    std_len = np.std(it_needed)
+    mean_len = np.mean(it_needed)
+    it_vals.append(mean_len)
+    it_vals_lower.append(mean_len - std_len)
+    it_vals_upper.append(mean_len + std_len)
+
+    plt.figure(figsize=(15,5))
+
+    plt.plot(evap_rate_vals, it_vals)
+    plt.fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color="green")
+    plt.title('Mean iteration per evaporation rate')
+    plt.xlabel('Evaporation rate')
+    plt.ylabel('Iterations')
+    plt.show()
+
+
 if __name__== "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')
@@ -87,10 +129,10 @@ if __name__== "__main__":
         it_vals_lower = []
         it_vals_upper = []
         # if we want to look at the mean of food or something we need to change range to higher.
-        evap_rate_vals = np.linspace(0.001, 0.0099, 10)
+        evap_rate_vals = np.linspace(0.001, 0.0099, 2)
 
         for e in evap_rate_vals:
-            for j in range(10):
+            for j in range(3):
                 ants = AntsCA(N)
                 ants.PHER_EVAPORATE = e
                 while True:
@@ -109,26 +151,10 @@ if __name__== "__main__":
                 print('#################')
 
             it_needed = [len(i[1]) for i in all_variables]
-            std_len = np.std(it_needed)
-            mean_len = np.mean(it_needed)
-            it_vals.append(mean_len)
-            it_vals_lower.append(mean_len - std_len)
-            it_vals_upper.append(mean_len + std_len)
 
             pher_list = np.asarray([i[1][:min(it_needed)] for i in all_variables]).mean(axis=0)
             all_pher.append(pher_list)
 
         if not args.no_graphs:
-            fig, axs = plt.subplots(ncols=2, figsize=(18,6), sharey=True)
-
-            for p, c in zip(all_pher, ['blue', 'green']):
-                axs[0].plot(np.arange(len(p)), p)
-                # ax1.fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color=c)
-            axs[0].set_title('Median evaporation')
-            axs[0].set(xlabel='Iterations', ylabel='Evaporation rate')
-
-            axs[1].plot(evap_rate_vals, it_vals)
-            axs[1].fill_between(evap_rate_vals, it_vals_lower, it_vals_upper, alpha=0.2, color="green")
-            axs[1].set_title('Median iteration')
-            axs[1].set(xlabel='Evaporation rate', ylabel='Iterations')
-            plt.show()
+            graph_ants_evap_iterate(all_pher)
+            graphs_iteration_per_evap(it_needed)
