@@ -23,15 +23,15 @@ class AntsCA():
     FOOD_PHER = -2
     PHER_EVAPORATE = .005
     INIT_ANT_SIGNAL = 100
-    INIT_FOOD_PER_SPOT = 10
-    INIT_N_FOOD = 10
+    __neighborhood = VonNeumannNeighborhood()
 
-    def __init__(self, N=100, ants_count=100, neighborhood=VonNeumannNeighborhood(), preset=None):
+    def __init__(self, food_sources=10, food_amount=10, N=100, ants_count=100, preset=None):
         self.FOOD_IN_NEST = 0
-        self.__neighborhood = neighborhood
         self.NEST_COORD = (0,0)
         self.counter = [[0,0]]
         self.ants_count = ants_count
+        self.INIT_N_FOOD = food_sources
+        self.INIT_FOOD_PER_SPOT = food_amount
 
         if preset:
             self.load_file(preset)
