@@ -24,7 +24,6 @@ def animate(i):
     im.set_data(animate.map)
     ants.evolve()
     animate.map = [[c[0].value / 10. + (c[1]/5. if c[0] == Cell.EMPTY else 0) for c in b] for b in ants.grid]
-    print(animate.map)
 
 def graph_food_time(iteration, food):
     # Plot the amount of food over iterations.
@@ -69,7 +68,7 @@ if __name__== "__main__":
         animate.map = mapping
 
         # Interval between frames (ms).
-        interval = 50
+        interval = 1
         anim = animation.FuncAnimation(fig, animate, interval=interval)
         plt.show()
 
