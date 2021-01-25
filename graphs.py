@@ -86,7 +86,6 @@ def graphs_iteration_per_evap_diff(it_needed):
     plt.ylabel('Iterations')
     plt.show()
 
-
 if __name__== "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--preset')

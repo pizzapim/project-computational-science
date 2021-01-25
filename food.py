@@ -12,17 +12,24 @@ from AntsCA import AntsCA, Cell
 # which means we will be able to divide it in lots of ways.
 # TBD: we can also try 60, but might be to many sources.
 inputs = [
-    (1, 12),
-    (2, 6),
-    (3, 4),
-    (4, 3),
-    (6, 2),
-    (12, 1)
+    (1, 180),
+    (2, 90),
+    (3, 60),
+    (6, 30),
+    (9, 20),
+    (12, 15),
+    (15, 12),
+    (20, 9),
+    (30, 6),
+    (60, 3),
+    (90, 2),
+    (180, 1)
 ]
 
 
 def experiment(filename, n):
     results = {}
+    count = 0
     for (sources, amount) in inputs:
         results[(sources, amount)] = []
         for _ in range(n):
@@ -36,6 +43,8 @@ def experiment(filename, n):
             food = [i[0] for i in ca.counter]
             on_pher = [i[1] for i in ca.counter]
             results[(sources, amount)].append((food, on_pher))
+            count += 1
+            print(count)
     
     pickle.dump(results, open(filename, "wb"))
         
