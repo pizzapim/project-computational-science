@@ -25,7 +25,7 @@ class AntsCA():
     INIT_ANT_SIGNAL = 100
     __neighborhood = VonNeumannNeighborhood()
 
-    def __init__(self, food_sources=10, food_amount=10, N=100, ants_count=100, preset=None):
+    def __init__(self, food_sources=10, food_amount=10, N=50, ants_count=100, preset=None):
         self.FOOD_IN_NEST = 0
         self.NEST_COORD = (0,0)
         self.counter = [[0,0]]
@@ -205,7 +205,6 @@ class AntsCA():
                     directions.append(Cell.SOUTH)
 
                 signal = 0
-                print(grid_copy[cy][cx][2])
             else:
                 self.__return_direction(cx, cy, x, y, directions, prev)
 

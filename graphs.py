@@ -97,7 +97,7 @@ if __name__== "__main__":
     if args.preset:
         ants = AntsCA(preset=args.preset)
     else:
-        ants = AntsCA(N)
+        ants = AntsCA(N=N)
 
     if args.animate:
         mapping = [[c[0].value / 10. + (c[1]/5. if c[0] == Cell.EMPTY else 0) for c in b] for b in ants.grid]
