@@ -205,7 +205,6 @@ class AntsCA():
                     directions.append(Cell.SOUTH)
 
                 signal = 0
-                print(grid_copy[cy][cx][2])
             else:
                 self.__return_direction(cx, cy, x, y, directions, prev)
 
