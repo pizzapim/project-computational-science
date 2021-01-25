@@ -1,7 +1,10 @@
 import argparse
 import pickle
+import matplotlib.pyplot as plt
+import numpy as np
 
 from AntsCA import AntsCA, Cell
+
 
 # Pairs of number of food sources & amount of food per source.
 # All add up to 12 food.
@@ -42,6 +45,32 @@ def graph(filename):
     # and value a list with each run.
     # Each list item contains (food per iteration, ants on pheromones trail)
     results = pickle.load(open(filename, "rb"))
+    plt.figure(figsize=(15,5))
+    for key, value in results.items():
+        plt.plot(np.arange(len(value[0][0])), value[0][0], label=key)
+    plt.xlabel('Iterations')
+    plt.ylabel('Food')
+    plt.title('Food distribution')
+    plt.legend()
+    plt.show()
+
+    # Bar plot
+    plt.figure(figsize=(15,5))
+    means = []
+    stds = []
+    food = []
+    keys = []
+    for key, value in results.items():
+        food.append([i[0] for i in value])
+        keys.append(key)
+        means.append(np.mean([len(i[0]) for i in value]))
+        stds.append(np.std([len(i[0]) for i in value]))
+
+    plt.bar(list(map(str,keys)), means, yerr=stds, align="center", label=key)
+    plt.xlabel('Iterations')
+    plt.ylabel('Food')
+    plt.title('Food collection time for')
+    plt.show()
 
 
 if __name__ == "__main__":
