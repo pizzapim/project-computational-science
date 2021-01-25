@@ -107,6 +107,7 @@ class AntsCA():
                 self.grid[y][x] = [cell, 0., 0]
                 n_ants += 1
 
+
     # Print grid in text.
     def print_grid(self):
         for y in range(0, self.N):
@@ -152,6 +153,7 @@ class AntsCA():
         self.__sense()
         self.__walk()
         self.__count()
+
 
     # Execute the "sense" algorithm from the book on the grid,
     # which rotates each ant towards the cell it wants to move to.
@@ -352,13 +354,13 @@ class AntsCA():
         else:
             grid_copy[y][x] = [Cell.STAY, pher, signal]
 
+
     # Count variables of AntsCA for graphs.
     def __count(self):
 
         (cx, cy) = self.NEST_COORD
         food = self.grid[cy][cx][2]
 
-        # Should be incorperated in sense to reduce computation.
         on_pher = 0
         for (x, y) in self.__internal_cells():
             [site, pher, _] = self.grid[y][x]
