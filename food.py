@@ -26,7 +26,7 @@ inputs = [
     (180, 1)
 ]
 
-def experiment3d(filename, n):
+def experiment3d(filename, n, ants):
     src = np.arange(10, 110, 10)
     amt = np.arange(10, 110, 10)
     srcv, amtv = np.meshgrid(src, amt)
@@ -42,7 +42,7 @@ def experiment3d(filename, n):
             it_it = []
             for time in range(n):
                 print("n: " + str(time + 1))
-                ca = AntsCA(food_sources=src[i], food_amount=amt[j])
+                ca = AntsCA(food_sources=src[i], food_amount=amt[j], ants_count=ants)
                 (nestx, nesty) = ca.NEST_COORD
 
                 while True:
@@ -58,13 +58,13 @@ def experiment3d(filename, n):
     pickle.dump((srcv, amtv, meanIts), open(filename[0], "wb"))
 
 
-def experiment(filename, n):
+def experiment(filename, n, ants):
     results = {}
     count = 0
     for (sources, amount) in inputs:
         results[(sources, amount)] = []
         for _ in range(n):
-            ca = AntsCA(food_sources=sources, food_amount=amount, ants_count=300)
+            ca = AntsCA(food_sources=sources, food_amount=amount, ants_count=ants)
             (nestx, nesty) = ca.NEST_COORD
             while True:
                 ca.evolve()
@@ -156,9 +156,6 @@ def multiple_bar(filenames):
     plt.show()
 
 
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', action='store_true')
@@ -168,6 +165,7 @@ if __name__ == "__main__":
     parser.add_argument('--multi', action='store_true')
     parser.add_argument('--file', nargs="+", default='food_results.p')
     parser.add_argument('--n', type=int, default=1)
+    parser.add_argument('--ants', type=int, default=100)
     args = parser.parse_args()
 
     if not (args.experiment ^ args.graph ^ args.experiment3d ^ args.graph3d ^ args.multi):
@@ -175,9 +173,9 @@ if __name__ == "__main__":
         exit(1)
 
     if args.experiment:
-        experiment(args.file, args.n)
+        experiment(args.file, args.n, args.ants)
     elif args.experiment3d:
-        experiment3d(args.file, args.n)
+        experiment3d(args.file, args.n, args.ants)
     elif args.graph:
         graph(args.file)
     elif args.multi:
