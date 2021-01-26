@@ -138,7 +138,7 @@ if __name__ == "__main__":
     if not (args.experiment ^ args.graph):
         print("Choose either --experiment or --graph.")
         exit(1)
-    
+
     if args.experiment:
         experiment(args.file, args.n)
     else:
