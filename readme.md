@@ -37,5 +37,5 @@ ex3d: python3 food.py --experiment3d --file ex3d --n 5 --ants 100
 
 ## Commands to plot the results
 python3 food.py --graph --file (ex1/ex2/ex3) \
-python3 food.py --graph3d --file ex3d
+python3 food.py --graph3d --file ex3d \
 python3 food.py --multi --file ex1 ex2 ex3
