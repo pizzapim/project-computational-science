@@ -1,3 +1,7 @@
+"""
+The main Cellular Automaton to model the ants behaviour.
+"""
+
 from Neighborhood import VonNeumannNeighborhood
 
 from enum import IntEnum

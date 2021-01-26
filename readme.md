@@ -1,4 +1,4 @@
-# Ant Pathfinding
+# Ants food distribution
 
 ## Setup
 
@@ -25,14 +25,17 @@ Each tick, these transformations are applied:
 * Ants carrying food will move in the direction of the nest
     * The ant releases some pheromones each cell moved
     * When they arrive at the nest, they start searching for food again
+    
+## How to generate the figure
+    
+![Figure you can generate](bars.png)
 
-## Commands used to get our results
-<span style="color:orange">**Note: we ran with a n=10 to get the average out of 10 runs, this takes longer to run.**</span> \
+**Note: we ran with a n=10 to get the average out of 10 runs, this takes longer to run. Try n=1 for faster results.** \
 ex1: python3 food.py --experiment --file ex1 --n 10 --ants 50 \
 ex2: python3 food.py --experiment --file ex2 --n 10 --ants 100 \
 ex3: python3 food.py --experiment --file ex3 --n 10 --ants 150 \
 \
-<span style="color:red">**Warning: This one takes quite a long time to run!**</span> \
+**Warning: This one takes quite a long time to run. Try n=1 for faster results.** \
 ex3d: python3 food.py --experiment3d --file ex3d --n 5 --ants 100
 
 ## Commands to plot the results

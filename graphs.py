@@ -1,3 +1,7 @@
+"""
+Script to visualise the Ants CA.
+"""
+
 from AntsCA import Cell, AntsCA
 
 import argparse

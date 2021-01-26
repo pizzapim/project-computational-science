@@ -1,3 +1,8 @@
+"""
+Class to create the Von Neumann neighorhoods.
+We originally planned to use bigger neighborhoods, but this is unused.
+"""
+
 class VonNeumannNeighborhood():
 
     def __init__(self, r=1):

@@ -1,3 +1,7 @@
+"""
+Script to generate the food-related graphs from the poster.
+"""
+
 import argparse
 import pickle
 import matplotlib.pyplot as plt
