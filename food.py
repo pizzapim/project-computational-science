@@ -8,10 +8,9 @@ from AntsCA import AntsCA, Cell
 from mpl_toolkits import mplot3d
 
 # Pairs of number of food sources & amount of food per source.
-# All add up to 12 food.
+# All add up to 180 food.
 # This number is a superior highly composite number,
 # which means we will be able to divide it in lots of ways.
-# TBD: we can also try 60, but might be to many sources.
 inputs = [
     (1, 180),
     (2, 90),
@@ -65,7 +64,7 @@ def experiment(filename, n):
     for (sources, amount) in inputs:
         results[(sources, amount)] = []
         for _ in range(n):
-            ca = AntsCA(food_sources=sources, food_amount=amount, ants_count=50)
+            ca = AntsCA(food_sources=sources, food_amount=amount, ants_count=300)
             (nestx, nesty) = ca.NEST_COORD
             while True:
                 ca.evolve()
@@ -83,17 +82,20 @@ def experiment(filename, n):
 def graph3d(filename):
     X, Y, Z = pickle.load(open(filename, "rb"))
 
-    plt.figure(figsize=(8,5))
+    plt.figure()
     ax = plt.axes(projection ='3d')
     ax.plot_surface(X, Y, Z, cmap ='viridis', edgecolor ='green')
     plt.show()
 
-    cs = plt.contourf(X, Y, Z) 
-    cbar = plt.colorbar(cs) 
-    plt.title('Number of iterations needed to collect all food') 
-    plt.xlabel=('Number of food per foodcell')
-    plt.ylabel=('Number of foodcells per simulation')
-    plt.show() 
+    cs = plt.contourf(X, Y, Z)
+    cbar = plt.colorbar(cs)
+    cbar.ax.tick_params(labelsize=20)
+    plt.title('Number of iterations', fontsize=20)
+    plt.xlabel('Number of foodsources', fontsize=20)
+    plt.ylabel('Number of food per source', fontsize=20)
+    plt.xticks(np.arange(20, 110, 20), fontsize=20)
+    plt.yticks(np.arange(20, 110, 20), fontsize=20)
+    plt.show()
 
 
 def graph(filename):
