@@ -65,7 +65,7 @@ def experiment(filename, n):
     for (sources, amount) in inputs:
         results[(sources, amount)] = []
         for _ in range(n):
-            ca = AntsCA(food_sources=sources, food_amount=amount)
+            ca = AntsCA(food_sources=sources, food_amount=amount, ants_count=50)
             (nestx, nesty) = ca.NEST_COORD
             while True:
                 ca.evolve()
