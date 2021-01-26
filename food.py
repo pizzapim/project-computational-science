@@ -55,7 +55,7 @@ def experiment3d(filename, n):
 
             meanIts[j][i] = int(np.mean(it_it))
 
-    pickle.dump((srcv, amtv, meanIts), open(filename, "wb"))
+    pickle.dump((srcv, amtv, meanIts), open(filename[0], "wb"))
 
 
 def experiment(filename, n):
@@ -77,10 +77,10 @@ def experiment(filename, n):
             count += 1
             print(count)
 
-    pickle.dump(results, open(filename, "wb"))
+    pickle.dump(results, open(filename[0], "wb"))
 
 def graph3d(filename):
-    X, Y, Z = pickle.load(open(filename, "rb"))
+    X, Y, Z = pickle.load(open(filename[0], "rb"))
 
     plt.figure()
     ax = plt.axes(projection ='3d')
@@ -102,7 +102,7 @@ def graph(filename):
     # Structure of results is a dictionary with keys (number of sources, amount per source)
     # and value a list with each run.
     # Each list item contains (food per iteration, ants on pheromones trail)
-    results = pickle.load(open(filename, "rb"))
+    results = pickle.load(open(filename[0], "rb"))
     plt.figure(figsize=(15,5))
     for key, value in results.items():
         plt.plot(np.arange(len(value[0][0])), value[0][0], label=key)
@@ -130,6 +130,34 @@ def graph(filename):
     plt.title('Food collection time for')
     plt.show()
 
+def multiple_bar(filenames):
+    # multi bar plot
+    plt.figure(figsize=(15,5))
+    ind = np.arange(12)
+    for f, barwidth, label, color in zip(filenames, [-0.2, 0, 0.2], [50, 100, 150], ['grey','darkgrey', 'black']):
+        results = pickle.load(open(f, "rb"))
+        means = []
+        stds = []
+        food = []
+        keys = []
+        for key, value in results.items():
+            food.append([i[0] for i in value])
+            keys.append(key)
+            means.append(np.mean([len(i[0]) for i in value]))
+            stds.append(np.std([len(i[0]) for i in value]))
+
+        plt.bar(ind+barwidth, means, width=0.2, yerr=stds, align="center", label=label, color=color)
+
+    plt.xticks(ind, list(map(str,keys)))
+    plt.xlabel('Food (Number of spots, Food per spot)')
+    plt.ylabel('Iteration')
+    plt.title('Food collection time for different number of ants.')
+    plt.legend()
+    plt.show()
+
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -137,12 +165,13 @@ if __name__ == "__main__":
     parser.add_argument('--experiment3d', action='store_true')
     parser.add_argument('--graph', action='store_true')
     parser.add_argument('--graph3d', action='store_true')
-    parser.add_argument('--file', default='food_results.p')
+    parser.add_argument('--multi', action='store_true')
+    parser.add_argument('--file', nargs="+", default='food_results.p')
     parser.add_argument('--n', type=int, default=1)
     args = parser.parse_args()
 
-    if not (args.experiment ^ args.graph ^ args.experiment3d ^ args.graph3d):
-        print("Choose either --experiment(3d) or --graph(3d).")
+    if not (args.experiment ^ args.graph ^ args.experiment3d ^ args.graph3d ^ args.multi):
+        print("Choose either --experiment(3d), --graph(3d) or --multi.")
         exit(1)
 
     if args.experiment:
@@ -151,5 +180,7 @@ if __name__ == "__main__":
         experiment3d(args.file, args.n)
     elif args.graph:
         graph(args.file)
+    elif args.multi:
+        multiple_bar(args.file)
     else:
         graph3d(args.file)
