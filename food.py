@@ -83,15 +83,17 @@ def experiment(filename, n):
 def graph3d(filename):
     X, Y, Z = pickle.load(open(filename, "rb"))
 
-    print(X)
-    print(Y)
-    print(Z)
-
     plt.figure(figsize=(8,5))
     ax = plt.axes(projection ='3d')
-
     ax.plot_surface(X, Y, Z, cmap ='viridis', edgecolor ='green')
     plt.show()
+
+    cs = plt.contourf(X, Y, Z) 
+    cbar = plt.colorbar(cs) 
+    plt.title('Number of iterations needed to collect all food') 
+    plt.xlabel=('Number of food per foodcell')
+    plt.ylabel=('Number of foodcells per simulation')
+    plt.show() 
 
 
 def graph(filename):
