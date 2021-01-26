@@ -26,5 +26,11 @@ Each tick, these transformations are applied:
     * The ant releases some pheromones each cell moved
     * When they arrive at the nest, they start searching for food again
 
-bars
-python food.py --multi --file ex3 ex5 ex6
+## Commands used to get our results
+ex3: python3 food.py --experiment --file ex3 --n 10 --ants 50
+
+ex5: python3 food.py --experiment --file ex5 --n 10 --ants 100
+
+ex6: python3 food.py --experiment --file ex6 --n 10 --ants 150
+
+ex3d100: python3 food.py --experiment3d --file ex3d100 --n 10 --ants 100
