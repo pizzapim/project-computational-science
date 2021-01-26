@@ -152,7 +152,7 @@ def multiple_bar(filenames):
     plt.xlabel('Food (Number of spots, Food per spot)', fontsize=20)
     plt.ylabel('Iteration', fontsize=20)
     plt.title('Food collection time for different number of ants.', fontsize=20)
-    plt.legend(fontsize=20)
+    plt.legend(list(map(lambda x: f'{x} ants', [50, 100, 150])), fontsize=20)
     plt.yticks(fontsize=20)
     plt.show()
 
