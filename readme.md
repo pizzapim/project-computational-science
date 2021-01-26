@@ -27,10 +27,15 @@ Each tick, these transformations are applied:
     * When they arrive at the nest, they start searching for food again
 
 ## Commands used to get our results
+<span style="color:orange">Note: we ran with a n=10 to get the average out of 10 runs, this takes longer to run.</span>
+
 ex3: python3 food.py --experiment --file ex3 --n 10 --ants 50
 
 ex5: python3 food.py --experiment --file ex5 --n 10 --ants 100
 
 ex6: python3 food.py --experiment --file ex6 --n 10 --ants 150
 
-ex3d100: python3 food.py --experiment3d --file ex3d100 --n 10 --ants 100
+
+<span style="color:red">Warning: This one takes quite a long time to run!</span>
+
+ex3d100: python3 food.py --experiment3d --file ex3d100 --n 5 --ants 100
