@@ -25,3 +25,6 @@ Each tick, these transformations are applied:
 * Ants carrying food will move in the direction of the nest
     * The ant releases some pheromones each cell moved
     * When they arrive at the nest, they start searching for food again
+
+bars
+python food.py --multi --file ex3 ex5 ex6

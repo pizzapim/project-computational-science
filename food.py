@@ -134,7 +134,7 @@ def multiple_bar(filenames):
     # multi bar plot
     plt.figure(figsize=(15,5))
     ind = np.arange(12)
-    for f, barwidth, label, color in zip(filenames, [-0.2, 0, 0.2], [50, 100, 150], ['grey','darkgrey', 'black']):
+    for f, barwidth, label, color in zip(filenames, [-0.2, 0, 0.2], [50, 100, 150], ['blue','orange', 'green']):
         results = pickle.load(open(f, "rb"))
         means = []
         stds = []
@@ -148,11 +148,12 @@ def multiple_bar(filenames):
 
         plt.bar(ind+barwidth, means, width=0.2, yerr=stds, align="center", label=label, color=color)
 
-    plt.xticks(ind, list(map(str,keys)))
-    plt.xlabel('Food (Number of spots, Food per spot)')
-    plt.ylabel('Iteration')
-    plt.title('Food collection time for different number of ants.')
-    plt.legend()
+    plt.xticks(ind, list(map(str,keys)), fontsize=20)
+    plt.xlabel('Food (Number of spots, Food per spot)', fontsize=20)
+    plt.ylabel('Iteration', fontsize=20)
+    plt.title('Food collection time for different number of ants.', fontsize=20)
+    plt.legend(fontsize=20)
+    plt.yticks(fontsize=20)
     plt.show()
 
 
