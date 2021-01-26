@@ -27,7 +27,7 @@ inputs = [
     (180, 1)
 ]
 
-def experiment3D(filename, n):
+def experiment3d(filename, n):
     src = np.arange(10, 110, 10)
     amt = np.arange(10, 110, 10)
     srcv, amtv = np.meshgrid(src, amt)
@@ -130,16 +130,22 @@ def graph(filename):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', action='store_true')
+    parser.add_argument('--experiment3d', action='store_true')
     parser.add_argument('--graph', action='store_true')
+    parser.add_argument('--graph3d', action='store_true')
     parser.add_argument('--file', default='food_results.p')
     parser.add_argument('--n', type=int, default=1)
     args = parser.parse_args()
 
-    if not (args.experiment ^ args.graph):
-        print("Choose either --experiment or --graph.")
+    if not (args.experiment ^ args.graph ^ args.experiment3d ^ args.graph3d):
+        print("Choose either --experiment(3d) or --graph(3d).")
         exit(1)
 
     if args.experiment:
         experiment(args.file, args.n)
-    else:
+    elif args.experiment3d:
+        experiment3d(args.file, args.n)
+    elif args.graph:
         graph(args.file)
+    else:
+        graph3d(args.file)
